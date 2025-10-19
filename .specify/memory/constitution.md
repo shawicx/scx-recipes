@@ -1,50 +1,49 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Version change: N/A → 1.0.0
+List of modified principles: None (new constitution)
+Added sections: Core Principles, Core Values, Success Criteria, Governance
+Removed sections: None (new constitution)
+Templates requiring updates: 
+- .specify/templates/plan-template.md ✅ updated
+- .specify/templates/spec-template.md ✅ updated
+- .specify/templates/tasks-template.md ✅ updated
+- .specify/commands/*.toml ⚠ pending
+Follow-up TODOs: None
+-->
+# Health Diet Recommendation Desktop App Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Privacy-First Design
+All user data must be stored locally on the user's device with no network transmission required. The application must function completely offline without any cloud dependencies. Users must have complete control over their personal health information.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### Local Processing Priority
+All computation and recommendations must be performed locally using Rust-based algorithms. The system must not rely on external services for core functionality, ensuring both privacy and reliability.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Transparent Algorithmic Recommendations
+The recommendation logic must be explainable to users, with clear reasoning for why specific dietary suggestions are made. Users must be able to understand how their health profile influences the recommendations.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Cross-Platform Desktop Accessibility
+The application must provide a consistent user experience across Windows, macOS, and Linux platforms using Tauri for the interface layer. The UI must be intuitive and accessible to non-technical users.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Performance-Driven Architecture
+The system must prioritize responsive performance with recommendations generated quickly (response time < 200ms). All operations should be optimized to provide a smooth user experience without perceptible delays.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Core Values
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Privacy > Performance > Interpretability > Visual Aesthetics > Extensibility
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Success Criteria
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Application startup time ≤ 2 seconds
+- Recommendation algorithms execute in real-time on local CPU
+- Users can complete all primary operations without network connectivity
+- Total data storage remains under 100 MB
+- User can export or delete all local data at any time
+- No user authentication or registration required
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution defines the fundamental constraints and priorities that supersede all other development practices. All feature specifications, implementation decisions, and architectural choices must comply with these principles. Amendments to this constitution require explicit documentation of the change, its impact on existing functionality, and approval from the project maintainers.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-10-19 | **Last Amended**: 2025-10-19
