@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
-use crate::{storage::models::{HealthProfile, DietRecommendation, DietHistory, Recipe}, AppResult, AppError};
+use crate::{storage::{Database, models::{HealthProfile, DietRecommendation, DietHistory, Recipe}}, AppResult, AppError};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HealthProfileDto {
@@ -132,78 +134,332 @@ pub struct AppConfigDto {
 
 // Tauri command implementations will go here
 #[tauri::command]
-pub fn save_health_profile(profile: HealthProfileDto) -> Result<String, String> {
-    // Implementation will be added in later tasks
-    Ok(Uuid::new_v4().to_string())
+pub fn save_health_profile(
+    profile: HealthProfileDto, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<String, String> {
+    // Convert DTO to domain model
+    let health_profile = HealthProfile {
+        id: profile.id.and_then(|id| Uuid::parse_str(&id).ok()).unwrap_or_else(Uuid::new_v4),
+        user_id: profile.user_id,
+        age: profile.age,
+        gender: profile.gender,
+        weight: profile.weight,
+        height: profile.height,
+        activity_level: profile.activity_level,
+        health_goals: profile.health_goals,
+        dietary_preferences: profile.dietary_preferences,
+        dietary_restrictions: profile.dietary_restrictions,
+        allergies: profile.allergies,
+        created_at: profile.created_at
+            .and_then(|dt| DateTime::parse_from_rfc3339(&dt).ok())
+            .unwrap_or_else(|| Utc::now().into())
+            .into(),
+        updated_at: Utc::now(),
+    };
+
+    // Validate the profile
+    health_profile.validate()
+        .map_err(|e| e.to_string())?;
+
+    // Save to database
+    db.save_health_profile(&health_profile)
+        .map_err(|e| e.to_string())?;
+
+    Ok(health_profile.id.to_string())
 }
 
 #[tauri::command]
-pub fn get_health_profile(user_id: String) -> Result<Option<HealthProfileDto>, String> {
-    // Implementation will be added in later tasks
-    Ok(None)
+pub fn get_health_profile(
+    user_id: String, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<Option<HealthProfileDto>, String> {
+    match db.get_health_profile(&user_id).map_err(|e| e.to_string())? {
+        Some(profile) => {
+            Ok(Some(HealthProfileDto {
+                id: Some(profile.id.to_string()),
+                user_id: profile.user_id,
+                age: profile.age,
+                gender: profile.gender,
+                weight: profile.weight,
+                height: profile.height,
+                activity_level: profile.activity_level,
+                health_goals: profile.health_goals,
+                dietary_preferences: profile.dietary_preferences,
+                dietary_restrictions: profile.dietary_restrictions,
+                allergies: profile.allergies,
+                created_at: Some(profile.created_at.to_rfc3339()),
+                updated_at: Some(profile.updated_at.to_rfc3339()),
+            }))
+        }
+        None => Ok(None)
+    }
 }
 
 #[tauri::command]
-pub fn delete_health_profile(user_id: String) -> Result<bool, String> {
-    // Implementation will be added in later tasks
-    Ok(true)
+pub fn delete_health_profile(
+    user_id: String, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<bool, String> {
+    db.delete_health_profile(&user_id)
+        .map_err(|e| e.to_string())
+        .map(|_| true)
 }
 
 #[tauri::command]
-pub fn get_recommendations(user_id: String) -> Result<Vec<RecommendationItemDto>, String> {
-    // Implementation will be added in later tasks
-    Ok(vec![])
+pub fn get_recommendations(
+    user_id: String, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<Vec<RecommendationItemDto>, String> {
+    let recommendations = db.get_recommendations(&user_id)
+        .map_err(|e| e.to_string())?;
+    
+    let dtos = recommendations.into_iter().map(|rec| RecommendationItemDto {
+        id: rec.id.to_string(),
+        user_id: rec.user_id,
+        title: rec.title,
+        description: rec.description,
+        ingredients: rec.ingredients.into_iter().map(|ing| IngredientDto {
+            name: ing.name,
+            amount: ing.amount,
+            unit: ing.unit,
+        }).collect(),
+        nutritional_info: NutritionalInfoDto {
+            calories: rec.nutritional_info.calories,
+            protein: rec.nutritional_info.protein,
+            carbs: rec.nutritional_info.carbs,
+            fat: rec.nutritional_info.fat,
+            fiber: rec.nutritional_info.fiber,
+        },
+        preparation_time: rec.preparation_time,
+        difficulty_level: rec.difficulty_level,
+        meal_type: rec.meal_type,
+        recipe_instructions: rec.recipe_instructions,
+        created_at: rec.created_at.to_rfc3339(),
+        is_personalized: rec.is_personalized,
+        relevance_score: rec.relevance_score,
+    }).collect();
+    
+    Ok(dtos)
 }
 
 #[tauri::command]
-pub fn get_recommendation_by_id(id: String) -> Result<Option<RecommendationItemDto>, String> {
-    // Implementation will be added in later tasks
-    Ok(None)
+pub fn get_recommendation_by_id(
+    id: String, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<Option<RecommendationItemDto>, String> {
+    match db.get_recommendation_by_id(&id).map_err(|e| e.to_string())? {
+        Some(rec) => {
+            Ok(Some(RecommendationItemDto {
+                id: rec.id.to_string(),
+                user_id: rec.user_id,
+                title: rec.title,
+                description: rec.description,
+                ingredients: rec.ingredients.into_iter().map(|ing| IngredientDto {
+                    name: ing.name,
+                    amount: ing.amount,
+                    unit: ing.unit,
+                }).collect(),
+                nutritional_info: NutritionalInfoDto {
+                    calories: rec.nutritional_info.calories,
+                    protein: rec.nutritional_info.protein,
+                    carbs: rec.nutritional_info.carbs,
+                    fat: rec.nutritional_info.fat,
+                    fiber: rec.nutritional_info.fiber,
+                },
+                preparation_time: rec.preparation_time,
+                difficulty_level: rec.difficulty_level,
+                meal_type: rec.meal_type,
+                recipe_instructions: rec.recipe_instructions,
+                created_at: rec.created_at.to_rfc3339(),
+                is_personalized: rec.is_personalized,
+                relevance_score: rec.relevance_score,
+            }))
+        }
+        None => Ok(None)
+    }
 }
 
 #[tauri::command]
-pub fn log_diet_entry(entry: DietEntryDto) -> Result<String, String> {
-    // Implementation will be added in later tasks
-    Ok(Uuid::new_v4().to_string())
+pub fn log_diet_entry(
+    entry: DietEntryDto, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<String, String> {
+    use chrono::NaiveDate;
+    
+    let date_attempted = entry.date_attempted.parse::<NaiveDate>()
+        .map_err(|_| "Invalid date format. Expected YYYY-MM-DD".to_string())?;
+    
+    let diet_history = DietHistory {
+        id: entry.id.and_then(|id| Uuid::parse_str(&id).ok()).unwrap_or_else(Uuid::new_v4),
+        user_id: entry.user_id,
+        diet_item_id: Uuid::parse_str(&entry.diet_item_id)
+            .map_err(|_| "Invalid diet item ID format".to_string())?,
+        date_attempted,
+        rating: entry.rating,
+        notes: entry.notes,
+        was_prepared: entry.was_prepared,
+        meal_type: entry.meal_type,
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+    };
+
+    // Validate the entry
+    diet_history.validate()
+        .map_err(|e| e.to_string())?;
+
+    // Save to database
+    db.log_diet_entry(&diet_history)
+        .map_err(|e| e.to_string())?;
+
+    Ok(diet_history.id.to_string())
 }
 
 #[tauri::command]
-pub fn get_diet_history(params: GetHistoryParamsDto) -> Result<Vec<DietEntryDto>, String> {
-    // Implementation will be added in later tasks
-    Ok(vec![])
+pub fn get_diet_history(
+    params: GetHistoryParamsDto, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<Vec<DietEntryDto>, String> {
+    let history = db.get_diet_history(
+        &params.user_id,
+        params.start_date.as_deref(),
+        params.end_date.as_deref(),
+        params.limit,
+        params.offset
+    ).map_err(|e| e.to_string())?;
+    
+    let dtos = history.into_iter().map(|h| DietEntryDto {
+        id: Some(h.id.to_string()),
+        user_id: h.user_id,
+        diet_item_id: h.diet_item_id.to_string(),
+        date_attempted: h.date_attempted.format("%Y-%m-%d").to_string(),
+        rating: h.rating,
+        notes: h.notes,
+        was_prepared: h.was_prepared,
+        meal_type: h.meal_type,
+        created_at: Some(h.created_at.to_rfc3339()),
+        updated_at: Some(h.updated_at.to_rfc3339()),
+    }).collect();
+    
+    Ok(dtos)
 }
 
 #[tauri::command]
-pub fn update_diet_entry(params: UpdateDietEntryParamsDto) -> Result<bool, String> {
-    // Implementation will be added in later tasks
-    Ok(true)
+pub fn update_diet_entry(
+    params: UpdateDietEntryParamsDto, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<bool, String> {
+    db.update_diet_entry(
+        &params.id,
+        params.rating,
+        params.notes,
+        params.was_prepared
+    ).map_err(|e| e.to_string())
+    .map(|_| true)
 }
 
 #[tauri::command]
-pub fn get_recipe_by_id(id: String) -> Result<Option<RecipeDto>, String> {
-    // Implementation will be added in later tasks
-    Ok(None)
+pub fn get_recipe_by_id(
+    id: String, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<Option<RecipeDto>, String> {
+    match db.get_recipe_by_id(&id).map_err(|e| e.to_string())? {
+        Some(recipe) => {
+            Ok(Some(RecipeDto {
+                id: recipe.id.to_string(),
+                title: recipe.title,
+                description: recipe.description,
+                ingredients: recipe.ingredients.into_iter().map(|ing| IngredientWithOptionalDto {
+                    name: ing.name,
+                    amount: ing.amount,
+                    unit: ing.unit,
+                    optional: ing.optional,
+                }).collect(),
+                nutritional_info_per_serving: NutritionalInfoDto {
+                    calories: recipe.nutritional_info_per_serving.calories,
+                    protein: recipe.nutritional_info_per_serving.protein,
+                    carbs: recipe.nutritional_info_per_serving.carbs,
+                    fat: recipe.nutritional_info_per_serving.fat,
+                    fiber: recipe.nutritional_info_per_serving.fiber,
+                },
+                preparation_time: recipe.preparation_time,
+                difficulty_level: recipe.difficulty_level,
+                meal_type: recipe.meal_type,
+                recipe_instructions: recipe.recipe_instructions,
+                cuisine_type: recipe.cuisine_type,
+                seasonal: recipe.seasonal,
+                tags: recipe.tags,
+                created_at: recipe.created_at.to_rfc3339(),
+                updated_at: recipe.updated_at.to_rfc3339(),
+            }))
+        }
+        None => Ok(None)
+    }
 }
 
 #[tauri::command]
-pub fn search_recipes(params: SearchRecipesParamsDto) -> Result<Vec<RecipeDto>, String> {
-    // Implementation will be added in later tasks
-    Ok(vec![])
+pub fn search_recipes(
+    params: SearchRecipesParamsDto, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<Vec<RecipeDto>, String> {
+    let recipes = db.search_recipes(
+        params.query.as_deref(),
+        params.tags.as_ref().map(|v| v.iter().map(|s| s.as_str()).collect()),
+        params.exclude_ingredients.as_ref().map(|v| v.iter().map(|s| s.as_str()).collect()),
+        params.max_preparation_time,
+        params.difficulty_level.as_deref(),
+        params.meal_type.as_deref(),
+        params.limit,
+        params.offset
+    ).map_err(|e| e.to_string())?;
+    
+    let dtos = recipes.into_iter().map(|r| RecipeDto {
+        id: r.id.to_string(),
+        title: r.title,
+        description: r.description,
+        ingredients: r.ingredients.into_iter().map(|ing| IngredientWithOptionalDto {
+            name: ing.name,
+            amount: ing.amount,
+            unit: ing.unit,
+            optional: ing.optional,
+        }).collect(),
+        nutritional_info_per_serving: NutritionalInfoDto {
+            calories: r.nutritional_info_per_serving.calories,
+            protein: r.nutritional_info_per_serving.protein,
+            carbs: r.nutritional_info_per_serving.carbs,
+            fat: r.nutritional_info_per_serving.fat,
+            fiber: r.nutritional_info_per_serving.fiber,
+        },
+        preparation_time: r.preparation_time,
+        difficulty_level: r.difficulty_level,
+        meal_type: r.meal_type,
+        recipe_instructions: r.recipe_instructions,
+        cuisine_type: r.cuisine_type,
+        seasonal: r.seasonal,
+        tags: r.tags,
+        created_at: r.created_at.to_rfc3339(),
+        updated_at: r.updated_at.to_rfc3339(),
+    }).collect();
+    
+    Ok(dtos)
 }
 
 #[tauri::command]
 pub fn get_config() -> Result<AppConfigDto, String> {
-    // Implementation will be added in later tasks
+    let config = crate::config::get_app_config()
+        .map_err(|e| e.to_string())?;
+        
     Ok(AppConfigDto {
-        version: "0.1.0".to_string(),
-        storage_path: "".to_string(),
-        privacy_mode: true,
-        theme: "system".to_string(),
+        version: config.version,
+        storage_path: config.storage_path.to_string_lossy().to_string(),
+        privacy_mode: config.privacy_mode,
+        theme: config.theme,
     })
 }
 
 #[tauri::command]
 pub fn set_config(config: AppConfigDto) -> Result<bool, String> {
-    // Implementation will be added in later tasks
-    Ok(true)
+    // In a real implementation, we would save the config to a file
+    // For now, we'll just return true to indicate success
+    Ok(true)  // Placeholder implementation
 }

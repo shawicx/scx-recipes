@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use tauri::Manager;
+
 mod commands;
 mod config;
 mod recommendation;
@@ -28,11 +30,38 @@ impl std::fmt::Display for AppError {
 
 impl std::error::Error for AppError {}
 
+impl From<rusqlite::Error> for AppError {
+    fn from(error: rusqlite::Error) -> Self {
+        AppError::Database(error.to_string())
+    }
+}
+
+impl From<serde_json::Error> for AppError {
+    fn from(error: serde_json::Error) -> Self {
+        AppError::Database(error.to_string())
+    }
+}
+
+impl From<uuid::Error> for AppError {
+    fn from(error: uuid::Error) -> Self {
+        AppError::Validation(error.to_string())
+    }
+}
+
+impl From<chrono::ParseError> for AppError {
+    fn from(error: chrono::ParseError) -> Self {
+        AppError::Validation(error.to_string())
+    }
+}
+
 impl From<AppError> for String {
     fn from(error: AppError) -> Self {
         error.to_string()
     }
 }
+
+use std::sync::Arc;
+use crate::storage::Database;
 
 #[cfg_attr(not(debug_assertions), tauri::mobile_entry_point)]
 pub fn run() {
@@ -53,7 +82,20 @@ pub fn run() {
             commands::set_config,
         ])
         .setup(|app| {
-            // Initialize database and other setup here
+            // Initialize database with path based on platform
+            let config = config::get_app_config().map_err(|e| {
+                eprintln!("Failed to get app config: {}", e);
+                tauri::Error::Io(std::io::Error::new(std::io::ErrorKind::Other, "config error"))
+            })?;
+            
+            let db = Database::new(&config.get_db_path()).map_err(|e| {
+                eprintln!("Failed to initialize database: {}", e);
+                tauri::Error::Io(std::io::Error::new(std::io::ErrorKind::Other, "database error"))
+            })?;
+            
+            // Store the database in the app state so it can be used by commands
+            app.manage(Arc::new(db));
+            
             Ok(())
         })
         .run(tauri::generate_context!())

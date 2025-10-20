@@ -30,3 +30,10 @@ coverage/
 # Tauri
 src-tauri/target/
 src-tauri/tauri-bundle/
+
+# Rust
+debug/
+release/
+*.rs.bk
+*.rlib
+*.prof*
