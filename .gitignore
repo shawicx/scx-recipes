@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+target/
+
+# Builds
+dist/
+build/
+
+# Environment variables
+.env*
+!.env.example
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# Vite
+.vite/
+
+# IDE
+.vscode/
+.idea/
+
+# Tauri
+src-tauri/target/
+src-tauri/tauri-bundle/
+
+# Rust
+debug/
+release/
+*.rs.bk
+*.rlib
+*.prof*

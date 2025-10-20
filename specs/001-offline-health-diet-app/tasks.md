@@ -24,11 +24,11 @@ description: "Task list for Offline Health Diet Recommendation App implementatio
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create Tauri project structure with React frontend and Rust backend
-- [ ] T002 Initialize package.json with React dependencies (react, react-dom, typescript, etc.)
-- [ ] T003 [P] Initialize Cargo.toml with Tauri dependencies (tauri, rusqlite, serde, chrono)
-- [ ] T004 [P] Configure TypeScript settings (tsconfig.json) for React frontend
-- [ ] T005 Setup project directory structure (components/, lib/, styles/, assets/)
+- [x] T001 Create Tauri project structure with React frontend and Rust backend
+- [x] T002 Initialize package.json with React dependencies (react, react-dom, typescript, etc.)
+- [x] T003 [P] Initialize Cargo.toml with Tauri dependencies (tauri, rusqlite, serde, chrono)
+- [x] T004 [P] Configure TypeScript settings (tsconfig.json) for React frontend
+- [x] T005 Setup project directory structure (components/, lib/, styles/, assets/)
 
 ---
 
@@ -38,14 +38,14 @@ description: "Task list for Offline Health Diet Recommendation App implementatio
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Setup SQLite database schema and migrations framework in src-tauri/
-- [ ] T007 [P] Configure Tauri to work with SQLite database in src-tauri/tauri.conf.json
-- [ ] T008 Create base data models (HealthProfile, DietRecommendation, DietHistory, Recipe) in src-tauri/src/storage/models.rs
-- [ ] T009 Setup database connection and operations in src-tauri/src/storage/database.rs
-- [ ] T010 [P] Implement configuration management for local data storage paths in src-tauri/src/config/
-- [ ] T011 Create TypeScript type definitions in src/lib/types.ts that match Rust structs
-- [ ] T012 Setup Tauri command API wrapper in src/lib/api.ts
-- [ ] T013 Configure cross-platform local data storage (macOS: ~/Library/Application Support/, Windows: %APPDATA%/, Linux: ~/.local/share/)
+- [x] T006 Setup SQLite database schema and migrations framework in src-tauri/
+- [x] T007 [P] Configure Tauri to work with SQLite database in src-tauri/tauri.conf.json
+- [x] T008 Create base data models (HealthProfile, DietRecommendation, DietHistory, Recipe) in src-tauri/src/storage/models.rs
+- [x] T009 Setup database connection and operations in src-tauri/src/storage/database.rs
+- [x] T010 [P] Implement configuration management for local data storage paths in src-tauri/src/config/
+- [x] T011 Create TypeScript type definitions in src/lib/types.ts that match Rust structs
+- [x] T012 Setup Tauri command API wrapper in src/lib/api.ts
+- [x] T013 Configure cross-platform local data storage (macOS: ~/Library/Application Support/, Windows: %APPDATA%/, Linux: ~/.local/share/)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 

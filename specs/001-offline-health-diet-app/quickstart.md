@@ -1,7 +1,7 @@
 # Quickstart Guide: Offline Health Diet Recommendation App
 
-**Date**: Sunday, October 19, 2025  
-**Feature**: Offline Health Diet Recommendation App  
+**Date**: Sunday, October 19, 2025
+**Feature**: Offline Health Diet Recommendation App
 **Branch**: 001-offline-health-diet-app
 
 ## Overview
@@ -15,7 +15,7 @@ Before starting, ensure you have the following installed:
 - **Rust**: Version 1.75 or higher
   - Install via [rustup.rs](https://rustup.rs/)
   - Verify with `rustc --version`
-  
+
 - **Node.js**: Version 18 or higher
   - Install via [nodejs.org](https://nodejs.org/)
   - Verify with `node --version`
@@ -28,7 +28,7 @@ Before starting, ensure you have the following installed:
 - **Platform-specific requirements**:
   - **Windows**: Visual Studio build tools with C++ support
   - **macOS**: Xcode command line tools (`xcode-select --install`)
-  - **Linux**: 
+  - **Linux**:
     - `webkit2gtk` development libraries
     - `cmake`, `g++`, `libssl-dev`
 
