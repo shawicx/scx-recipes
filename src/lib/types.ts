@@ -57,6 +57,7 @@ export interface GetHistoryParams {
   endDate?: string; // ISO date string
   limit?: number;
   offset?: number;
+  mealType?: "breakfast" | "lunch" | "dinner" | "snack"; // Additional filter for meal type
 }
 
 export interface UpdateDietEntryParams {

@@ -319,17 +319,23 @@ impl Database {
         end_date: Option<&str>,
         limit: Option<u32>,
         offset: Option<u32>,
+        meal_type: Option<&str>, // New parameter for filtering by meal type
     ) -> AppResult<Vec<DietHistory>> {
         let conn = Connection::open(&self.path)?;
         // Build the query with optional date filtering
         let mut query = "SELECT id, user_id, diet_item_id, date_attempted, rating, notes, was_prepared, meal_type, created_at, updated_at FROM diet_history WHERE user_id = ?1".to_string();
+        let mut param_counter = 2; // Start from 2 since user_id is parameter 1
 
         if start_date.is_some() {
-            query.push_str(" AND date_attempted >= ?2");
+            query.push_str(&format!(" AND date_attempted >= ?{}", param_counter));
+            param_counter += 1;
         }
         if end_date.is_some() {
-            let start_param_count = if start_date.is_some() { 3 } else { 2 };
-            query.push_str(&format!(" AND date_attempted <= ?{}", start_param_count));
+            query.push_str(&format!(" AND date_attempted <= ?{}", param_counter));
+            param_counter += 1;
+        }
+        if meal_type.is_some() {
+            query.push_str(&format!(" AND meal_type = ?{}", param_counter));
         }
 
         query.push_str(" ORDER BY date_attempted DESC");
@@ -355,6 +361,9 @@ impl Database {
             }
             if let Some(end) = end_date {
                 p.push(Box::new(end.to_owned()));
+            }
+            if let Some(meal) = meal_type {
+                p.push(Box::new(meal.to_owned()));
             }
             p
         };
@@ -390,6 +399,52 @@ impl Database {
             .map_err(|e| crate::AppError::Database(e.to_string()))?;
 
         Ok(history)
+    }
+
+    pub fn get_diet_history_count(
+        &self,
+        user_id: &str,
+        start_date: Option<&str>,
+        end_date: Option<&str>,
+        meal_type: Option<&str>,
+    ) -> AppResult<u32> {
+        let conn = Connection::open(&self.path)?;
+        let mut query = "SELECT COUNT(*) FROM diet_history WHERE user_id = ?1".to_string();
+        let mut param_counter = 2; // Start from 2 since user_id is parameter 1
+
+        if start_date.is_some() {
+            query.push_str(&format!(" AND date_attempted >= ?{}", param_counter));
+            param_counter += 1;
+        }
+        if end_date.is_some() {
+            query.push_str(&format!(" AND date_attempted <= ?{}", param_counter));
+            param_counter += 1;
+        }
+        if meal_type.is_some() {
+            query.push_str(&format!(" AND meal_type = ?{}", param_counter));
+        }
+
+        let params: Vec<Box<dyn rusqlite::ToSql>> = {
+            let mut p: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(user_id.to_owned())];
+            if let Some(start) = start_date {
+                p.push(Box::new(start.to_owned()));
+            }
+            if let Some(end) = end_date {
+                p.push(Box::new(end.to_owned()));
+            }
+            if let Some(meal) = meal_type {
+                p.push(Box::new(meal.to_owned()));
+            }
+            p
+        };
+
+        let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|b| b.as_ref()).collect();
+
+        let count: i32 = conn
+            .query_row(&query, param_refs.as_slice(), |row| row.get(0))
+            .map_err(|e| crate::AppError::Database(e.to_string()))?;
+
+        Ok(count as u32)
     }
 
     pub fn update_diet_entry(

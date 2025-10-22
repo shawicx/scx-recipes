@@ -76,6 +76,7 @@ pub struct GetHistoryParamsDto {
     pub end_date: Option<String>,   // ISO date string
     pub limit: Option<u32>,
     pub offset: Option<u32>,
+    pub meal_type: Option<String>,  // Filter by meal type ('breakfast', 'lunch', 'dinner', 'snack')
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -342,7 +343,8 @@ pub fn get_diet_history(
         params.start_date.as_deref(),
         params.end_date.as_deref(),
         params.limit,
-        params.offset
+        params.offset,
+        params.meal_type.as_deref()
     ).map_err(|e| e.to_string())?;
     
     let dtos = history.into_iter().map(|h| DietEntryDto {
@@ -359,6 +361,21 @@ pub fn get_diet_history(
     }).collect();
     
     Ok(dtos)
+}
+
+#[tauri::command]
+pub fn get_diet_history_count(
+    params: GetHistoryParamsDto, 
+    db: tauri::State<'_, Arc<Database>>
+) -> Result<u32, String> {
+    let count = db.get_diet_history_count(
+        &params.user_id,
+        params.start_date.as_deref(),
+        params.end_date.as_deref(),
+        params.meal_type.as_deref()
+    ).map_err(|e| e.to_string())?;
+    
+    Ok(count)
 }
 
 #[tauri::command]

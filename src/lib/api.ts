@@ -51,6 +51,12 @@ export const getDietHistory = async (
   return await invoke("get_diet_history", { params });
 };
 
+export const getDietHistoryCount = async (
+  params: GetHistoryParams,
+): Promise<number> => {
+  return await invoke("get_diet_history_count", { params });
+};
+
 export const updateDietEntry = async (
   params: UpdateDietEntryParams,
 ): Promise<boolean> => {

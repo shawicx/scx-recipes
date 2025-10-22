@@ -105,16 +105,16 @@ description: "Task list for Offline Health Diet Recommendation App implementatio
 
 ### Implementation for User Story 3
 
-- [ ] T034 [P] [US3] Implement log_diet_entry Tauri command in src-tauri/src/commands.rs
-- [ ] T035 [P] [US3] Implement get_diet_history Tauri command in src-tauri/src/commands.rs
-- [ ] T036 [P] [US3] Implement update_diet_entry Tauri command in src-tauri/src/commands.rs
-- [ ] T037 [US3] Add validation logic for DietHistory in src-tauri/src/storage/models.rs
-- [ ] T038 [US3] Create History React component in src/components/History/
-- [ ] T039 [US3] Create history list UI in src/components/History/HistoryList.tsx
-- [ ] T040 [US3] Implement history entry form in src/components/History/HistoryEntryForm.tsx
-- [ ] T041 [US3] Add pagination and filtering to history UI
-- [ ] T042 [US3] Connect frontend to history backend in src/components/History/HistoryList.tsx
-- [ ] T043 [US3] Implement rating and note functionality in History components
+- [X] T034 [P] [US3] Implement log_diet_entry Tauri command in src-tauri/src/commands.rs
+- [X] T035 [P] [US3] Implement get_diet_history Tauri command in src-tauri/src/commands.rs
+- [X] T036 [P] [US3] Implement update_diet_entry Tauri command in src-tauri/src/commands.rs
+- [X] T037 [US3] Add validation logic for DietHistory in src-tauri/src/storage/models.rs
+- [X] T038 [US3] Create History React component in src/components/History/
+- [X] T039 [US3] Create history list UI in src/components/History/HistoryList.tsx
+- [X] T040 [US3] Implement history entry form in src/components/History/HistoryEntryForm.tsx
+- [X] T041 [US3] Add pagination and filtering to history UI
+- [X] T042 [US3] Connect frontend to history backend in src/components/History/HistoryList.tsx
+- [X] T043 [US3] Implement rating and note functionality in History components
 
 **Checkpoint**: All user stories should now be independently functional
 
