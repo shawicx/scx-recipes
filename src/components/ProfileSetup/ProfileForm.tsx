@@ -5,6 +5,8 @@ import {
   deleteHealthProfile,
 } from "../../lib/api";
 import { HealthProfile } from "../../lib/types";
+import { useErrorDispatch } from "../../lib/ErrorContext";
+import { Button } from "../../components/common";
 
 const ProfileForm: React.FC = () => {
   const [profile, setProfile] = useState<HealthProfile>({
@@ -21,17 +23,16 @@ const ProfileForm: React.FC = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [existingProfile, setExistingProfile] = useState<HealthProfile | null>(
     null,
   );
+  const dispatchError = useErrorDispatch();
 
   // Load existing profile on component mount
   useEffect(() => {
     const loadProfile = async () => {
       setIsLoading(true);
-      setError(null);
       try {
         // Using a default user ID for this example - in a real app, this would be the logged-in user
         const userId = "current-user";
@@ -41,7 +42,12 @@ const ProfileForm: React.FC = () => {
           setProfile(loadedProfile);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load profile");
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load profile";
+        dispatchError({
+          type: "SHOW_ERROR",
+          payload: { message: errorMessage, type: "error" },
+        });
       } finally {
         setIsLoading(false);
       }
@@ -81,7 +87,6 @@ const ProfileForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
     setSuccess(false);
 
     try {
@@ -94,8 +99,22 @@ const ProfileForm: React.FC = () => {
       await saveHealthProfile(profileToSave);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
+      dispatchError({
+        type: "SHOW_ERROR",
+        payload: {
+          message: existingProfile
+            ? "Profile updated successfully!"
+            : "Profile saved successfully!",
+          type: "success",
+        },
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save profile");
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to save profile";
+      dispatchError({
+        type: "SHOW_ERROR",
+        payload: { message: errorMessage, type: "error" },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +122,10 @@ const ProfileForm: React.FC = () => {
 
   const handleDelete = async () => {
     if (!profile.userId) {
-      setError("No user ID specified");
+      dispatchError({
+        type: "SHOW_ERROR",
+        payload: { message: "No user ID specified", type: "error" },
+      });
       return;
     }
 
@@ -116,7 +138,6 @@ const ProfileForm: React.FC = () => {
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
       await deleteHealthProfile(profile.userId);
@@ -135,8 +156,17 @@ const ProfileForm: React.FC = () => {
       });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
+      dispatchError({
+        type: "SHOW_ERROR",
+        payload: { message: "Profile deleted successfully!", type: "success" },
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete profile");
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete profile";
+      dispatchError({
+        type: "SHOW_ERROR",
+        payload: { message: errorMessage, type: "error" },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -147,26 +177,6 @@ const ProfileForm: React.FC = () => {
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
         Health Profile Setup
       </h2>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
-          {existingProfile
-            ? "Profile updated successfully!"
-            : "Profile saved successfully!"}
-        </div>
-      )}
-
-      {isLoading && (
-        <div className="mb-4 p-3 bg-blue-100 text-blue-700 rounded-md">
-          Loading...
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -385,27 +395,22 @@ const ProfileForm: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-4 pt-4">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isLoading} variant="primary">
             {isLoading
               ? "Saving..."
               : existingProfile
                 ? "Update Profile"
                 : "Save Profile"}
-          </button>
+          </Button>
 
           {existingProfile && (
-            <button
-              type="button"
+            <Button
               onClick={handleDelete}
               disabled={isLoading}
-              className="px-6 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+              variant="danger"
             >
               Delete Profile
-            </button>
+            </Button>
           )}
         </div>
       </form>

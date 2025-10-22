@@ -15,6 +15,94 @@
   -webkit-text-size-adjust: 100%;
 }
 
+/* Light theme variables */
+.light {
+  color: #213547;
+  background-color: #ffffff;
+}
+
+.light a:hover {
+  color: #747bff;
+}
+
+.light input,
+.light button {
+  background-color: #f9f9f9;
+  color: #0f0f0f;
+  border: 1px solid #ddd;
+}
+
+/* Dark theme variables */
+.dark {
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+}
+
+.dark a:hover {
+  color: #535bf2;
+}
+
+.dark input,
+.dark button {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #555;
+}
+
+/* Common styles that apply to all themes */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(90deg, #646cff, #24c8db, #61dafb) 1;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.app-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.app-section {
+  background-color: var(--section-bg, #f9f9f9);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.app-section h2 {
+  margin-top: 0;
+  color: var(--accent-color, #646cff);
+  border-bottom: 2px solid var(--accent-color, #646cff);
+  padding-bottom: 0.5rem;
+}
+
+/* Theme-specific variables */
+.light .app-section {
+  --section-bg: #f9f9f9;
+  --accent-color: #646cff;
+}
+
+.dark .app-section {
+  --section-bg: #2a2a2a;
+  --accent-color: #535bf2;
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;

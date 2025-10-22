@@ -124,18 +124,18 @@ description: "Task list for Offline Health Diet Recommendation App implementatio
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T044 [P] Add application configuration commands (get_config, set_config) in src-tauri/src/commands.rs
-- [ ] T045 Create common UI components in src/components/common/
-- [ ] T046 [P] Implement error handling and user feedback throughout the app
-- [ ] T047 [P] Add application theming (light/dark mode) in src/styles/
-- [ ] T048 Add performance monitoring and timing for recommendation generation
-- [ ] T049 [P] Add logging throughout Rust backend for debugging
-- [ ] T050 Conduct offline functionality testing to ensure no network calls
-- [ ] T051 [P] Add unit tests for Rust modules in src-tauri/tests/
-- [ ] T052 Add UI component tests in src/tests/ui/
-- [ ] T053 Package and test cross-platform distribution
-- [ ] T054 Performance optimization to meet <200ms recommendation generation
-- [ ] T055 Documentation updates for the application
+- [X] T044 [P] Add application configuration commands (get_config, set_config) in src-tauri/src/commands.rs
+- [X] T045 Create common UI components in src/components/common/
+- [X] T046 [P] Implement error handling and user feedback throughout the app
+- [X] T047 [P] Add application theming (light/dark mode) in src/styles/
+- [X] T048 Add performance monitoring and timing for recommendation generation
+- [X] T049 [P] Add logging throughout Rust backend for debugging
+- [X] T050 Conduct offline functionality testing to ensure no network calls
+- [X] T051 [P] Add unit tests for Rust modules in src-tauri/tests/
+- [X] T052 Add UI component tests in src/tests/ui/
+- [X] T053 Package and test cross-platform distribution
+- [X] T054 Performance optimization to meet <200ms recommendation generation
+- [X] T055 Documentation updates for the application
 
 ---
 

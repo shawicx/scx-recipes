@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { DietEntry } from '../../lib/types';
 import { logDietEntry, updateDietEntry } from '../../lib/api';
+import { useErrorDispatch } from '../../lib/ErrorContext';
+import { Button } from '../../components/common';
 
 interface HistoryEntryFormProps {
   onEntryAdded?: () => void; // Callback when an entry is added
@@ -18,6 +20,7 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
   const [mealType, setMealType] = useState<string>(existingEntry?.mealType || 'lunch');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const dispatchError = useErrorDispatch();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +63,11 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
           notes: notes || undefined,
           wasPrepared,
         });
+        dispatchError({ type: 'SHOW_ERROR', payload: { message: 'History entry updated successfully!', type: 'success' } });
       } else {
         // Create new entry
         await logDietEntry(entry);
+        dispatchError({ type: 'SHOW_ERROR', payload: { message: 'History entry added successfully!', type: 'success' } });
       }
 
       // Reset form
@@ -81,7 +86,8 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
       }
     } catch (error) {
       console.error('Error submitting diet entry:', error);
-      alert('Failed to save diet entry. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save diet entry';
+      dispatchError({ type: 'SHOW_ERROR', payload: { message: errorMessage, type: 'error' } });
     } finally {
       setSubmitting(false);
     }
@@ -170,13 +176,13 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
         </div>
 
         <div className="form-actions">
-          <button type="submit" disabled={submitting}>
+          <Button type="submit" disabled={submitting} variant="primary">
             {submitting ? 'Submitting...' : (existingEntry ? 'Update Entry' : 'Add Entry')}
-          </button>
+          </Button>
           {existingEntry && onCancel && (
-            <button type="button" onClick={onCancel}>
+            <Button type="button" onClick={onCancel} variant="secondary">
               Cancel
-            </button>
+            </Button>
           )}
         </div>
       </form>

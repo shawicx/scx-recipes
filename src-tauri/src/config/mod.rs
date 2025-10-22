@@ -17,8 +17,8 @@ impl AppConfig {
         // macOS: ~/Library/Application Support/SmartDiet/
         // Windows: %APPDATA%/SmartDiet/
         // Linux: ~/.local/share/SmartDiet/
-        let storage_path = Self::get_platform_data_dir(app_name)
-            .unwrap_or_else(|| PathBuf::from(".")); // fallback to current directory
+        let storage_path =
+            Self::get_platform_data_dir(app_name).unwrap_or_else(|| PathBuf::from(".")); // fallback to current directory
 
         // Ensure the storage directory exists
         std::fs::create_dir_all(&storage_path)?;
@@ -35,16 +35,22 @@ impl AppConfig {
         // Get the appropriate data directory based on the platform
         if cfg!(target_os = "macos") {
             env::var("HOME").ok().map(|home| {
-                PathBuf::from(home).join("Library").join("Application Support").join(app_name)
+                PathBuf::from(home)
+                    .join("Library")
+                    .join("Application Support")
+                    .join(app_name)
             })
         } else if cfg!(target_os = "windows") {
-            env::var("APPDATA").ok().map(|appdata| {
-                PathBuf::from(appdata).join(app_name)
-            })
+            env::var("APPDATA")
+                .ok()
+                .map(|appdata| PathBuf::from(appdata).join(app_name))
         } else {
             // Linux and other Unix-like systems
             env::var("HOME").ok().map(|home| {
-                PathBuf::from(home).join(".local").join("share").join(app_name)
+                PathBuf::from(home)
+                    .join(".local")
+                    .join("share")
+                    .join(app_name)
             })
         }
     }

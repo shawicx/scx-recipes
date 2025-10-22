@@ -60,11 +60,14 @@ impl From<AppError> for String {
     }
 }
 
-use std::sync::Arc;
 use crate::storage::Database;
+use std::sync::Arc;
 
 #[cfg_attr(not(debug_assertions), tauri::mobile_entry_point)]
 pub fn run() {
+    // Initialize logger
+    env_logger::init();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
@@ -85,17 +88,23 @@ pub fn run() {
             // Initialize database with path based on platform
             let config = config::get_app_config().map_err(|e| {
                 eprintln!("Failed to get app config: {}", e);
-                tauri::Error::Io(std::io::Error::new(std::io::ErrorKind::Other, "config error"))
+                tauri::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "config error",
+                ))
             })?;
-            
+
             let db = Database::new(&config.get_db_path()).map_err(|e| {
                 eprintln!("Failed to initialize database: {}", e);
-                tauri::Error::Io(std::io::Error::new(std::io::ErrorKind::Other, "database error"))
+                tauri::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "database error",
+                ))
             })?;
-            
+
             // Store the database in the app state so it can be used by commands
             app.manage(Arc::new(db));
-            
+
             Ok(())
         })
         .run(tauri::generate_context!())

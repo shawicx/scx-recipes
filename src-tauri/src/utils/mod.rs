@@ -16,3 +16,5 @@ pub fn load_sample_recipes() -> Result<Vec<Recipe>, String> {
 
     Ok(recipes)
 }
+
+pub mod performance;
