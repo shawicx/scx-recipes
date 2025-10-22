@@ -207,12 +207,26 @@ pub fn delete_health_profile(
 }
 
 #[tauri::command]
-pub fn get_recommendations(
+pub async fn get_recommendations(
     user_id: String, 
     db: tauri::State<'_, Arc<Database>>
 ) -> Result<Vec<RecommendationItemDto>, String> {
-    let recommendations = db.get_recommendations(&user_id)
-        .map_err(|e| e.to_string())?;
+    // Get the user's health profile to generate personalized recommendations
+    let profile = db.get_health_profile(&user_id)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "Health profile not found for the user".to_string())?;
+    
+    // Load sample recipes or get from database
+    let sample_recipes = crate::utils::load_sample_recipes()?;
+    
+    // Create a recommendation engine and add the recipes
+    let mut engine = crate::recommendation::engine::RecommendationEngine::new();
+    for recipe in sample_recipes {
+        engine.add_recipe(recipe);
+    }
+    
+    // Generate recommendations based on the user's profile
+    let recommendations = engine.get_recommendations(&profile);
     
     let dtos = recommendations.into_iter().map(|rec| RecommendationItemDto {
         id: rec.id.to_string(),
@@ -244,11 +258,14 @@ pub fn get_recommendations(
 }
 
 #[tauri::command]
-pub fn get_recommendation_by_id(
+pub async fn get_recommendation_by_id(
     id: String, 
     db: tauri::State<'_, Arc<Database>>
 ) -> Result<Option<RecommendationItemDto>, String> {
-    match db.get_recommendation_by_id(&id).map_err(|e| e.to_string())? {
+    // Get the recommendation by ID from the database
+    let rec = db.get_recommendation_by_id(&id).map_err(|e| e.to_string())?;
+    
+    match rec {
         Some(rec) => {
             Ok(Some(RecommendationItemDto {
                 id: rec.id.to_string(),

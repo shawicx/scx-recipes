@@ -81,17 +81,17 @@ description: "Task list for Offline Health Diet Recommendation App implementatio
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Implement recommendation engine module in src-tauri/src/recommendation/engine.rs
-- [ ] T024 [P] [US2] Implement rule-based recommendation logic in src-tauri/src/recommendation/rules.rs
-- [ ] T025 [P] [US2] Create base recipe database with sample recipes in src-tauri/
-- [ ] T026 [US2] Implement get_recommendations Tauri command in src-tauri/src/commands.rs
-- [ ] T027 [US2] Implement get_recommendation_by_id Tauri command in src-tauri/src/commands.rs
-- [ ] T028 [US2] Add dietary restriction filtering to recommendation engine
-- [ ] T029 [US2] Create Recommendations React component in src/components/Recommendations/
-- [ ] T030 [US2] Create recommendation display UI in src/components/Recommendations/RecommendationList.tsx
-- [ ] T031 [US2] Implement recommendation card design in src/components/Recommendations/RecommendationCard.tsx
-- [ ] T032 [US2] Connect frontend to recommendation backend in src/components/Recommendations/RecommendationList.tsx
-- [ ] T033 [US2] Implement "mark as tried" functionality in src/components/Recommendations/RecommendationCard.tsx
+- [X] T023 [P] [US2] Implement recommendation engine module in src-tauri/src/recommendation/engine.rs
+- [X] T024 [P] [US2] Implement rule-based recommendation logic in src-tauri/src/recommendation/rules.rs
+- [X] T025 [P] [US2] Create base recipe database with sample recipes in src-tauri/
+- [X] T026 [US2] Implement get_recommendations Tauri command in src-tauri/src/commands.rs
+- [X] T027 [US2] Implement get_recommendation_by_id Tauri command in src-tauri/src/commands.rs
+- [X] T028 [US2] Add dietary restriction filtering to recommendation engine
+- [X] T029 [US2] Create Recommendations React component in src/components/Recommendations/
+- [X] T030 [US2] Create recommendation display UI in src/components/Recommendations/RecommendationList.tsx
+- [X] T031 [US2] Implement recommendation card design in src/components/Recommendations/RecommendationCard.tsx
+- [X] T032 [US2] Connect frontend to recommendation backend in src/components/Recommendations/RecommendationList.tsx
+- [X] T033 [US2] Implement "mark as tried" functionality in src/components/Recommendations/RecommendationCard.tsx
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 

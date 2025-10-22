@@ -74,12 +74,14 @@
   border-radius: 1px;
 }
 
-.container ul, .container ol {
+.container ul,
+.container ol {
   margin: 1rem 0;
   padding-left: 2rem;
 }
 
-.container ul li, .container ol li {
+.container ul li,
+.container ol li {
   margin: 0.5rem 0;
   position: relative;
 }
@@ -93,7 +95,10 @@
   font-weight: 600;
 }
 
-.container ul ul, .container ol ul, .container ul ol, .container ol ol {
+.container ul ul,
+.container ol ul,
+.container ul ol,
+.container ol ol {
   margin: 0.5rem 0;
   padding-left: 1.5rem;
 }
@@ -107,15 +112,15 @@
   .container {
     padding: 1rem;
   }
-  
+
   .container h1 {
     font-size: 2rem;
   }
-  
+
   .container h2 {
     font-size: 1.5rem;
   }
-  
+
   .container h3 {
     font-size: 1.25rem;
   }
