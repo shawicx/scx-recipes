@@ -16,12 +16,109 @@
 }
 
 .container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+/* 文档内容样式 */
+.container p {
+  margin: 1rem 0;
+  font-size: 1rem;
+  color: inherit;
+}
+
+.container h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem 0;
+  color: #646cff;
+  border-bottom: 3px solid #646cff;
+  padding-bottom: 0.5rem;
+}
+
+.container h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 1.8rem 0 1rem 0;
+  color: #535bf2;
+  border-left: 4px solid #535bf2;
+  padding-left: 1rem;
+}
+
+.container h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.8rem 0;
+  color: #24c8db;
+}
+
+.container h4 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 1.2rem 0 0.6rem 0;
+}
+
+.container strong {
+  font-weight: 600;
+  color: #646cff;
+}
+
+.container hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, #646cff, #24c8db, #61dafb);
+  margin: 2rem 0;
+  border-radius: 1px;
+}
+
+.container ul, .container ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.container ul li, .container ol li {
+  margin: 0.5rem 0;
+  position: relative;
+}
+
+.container ul li::marker {
+  color: #646cff;
+}
+
+.container ol li::marker {
+  color: #535bf2;
+  font-weight: 600;
+}
+
+.container ul ul, .container ol ul, .container ul ol, .container ol ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.container ul ul li::marker {
+  color: #24c8db;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .container h1 {
+    font-size: 2rem;
+  }
+  
+  .container h2 {
+    font-size: 1.5rem;
+  }
+  
+  .container h3 {
+    font-size: 1.25rem;
+  }
 }
 
 .logo {

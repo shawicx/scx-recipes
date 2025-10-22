@@ -3,7 +3,7 @@ Version change: N/A → 1.0.0
 List of modified principles: None (new constitution)
 Added sections: Core Principles, Core Values, Success Criteria, Governance
 Removed sections: None (new constitution)
-Templates requiring updates: 
+Templates requiring updates:
 - .specify/templates/plan-template.md ✅ updated
 - .specify/templates/spec-template.md ✅ updated
 - .specify/templates/tasks-template.md ✅ updated

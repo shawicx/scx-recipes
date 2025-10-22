@@ -59,15 +59,15 @@ description: "Task list for Offline Health Diet Recommendation App implementatio
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Implement save_health_profile Tauri command in src-tauri/src/commands.rs
-- [ ] T015 [P] [US1] Implement get_health_profile Tauri command in src-tauri/src/commands.rs
-- [ ] T016 [P] [US1] Implement delete_health_profile Tauri command in src-tauri/src/commands.rs
-- [ ] T017 [P] [US1] Add validation logic for HealthProfile in src-tauri/src/storage/models.rs
-- [ ] T018 [US1] Create ProfileSetup React component in src/components/ProfileSetup/
-- [ ] T019 [US1] Create form UI for health profile in src/components/ProfileSetup/ProfileForm.tsx
-- [ ] T020 [US1] Implement form validation and submission in src/components/ProfileSetup/ProfileForm.tsx
-- [ ] T021 [US1] Connect frontend to backend using Tauri commands in src/components/ProfileSetup/ProfileForm.tsx
-- [ ] T022 [US1] Add data persistence and retrieval functionality to ProfileForm component
+- [x] T014 [P] [US1] Implement save_health_profile Tauri command in src-tauri/src/commands.rs
+- [x] T015 [P] [US1] Implement get_health_profile Tauri command in src-tauri/src/commands.rs
+- [x] T016 [P] [US1] Implement delete_health_profile Tauri command in src-tauri/src/commands.rs
+- [x] T017 [P] [US1] Add validation logic for HealthProfile in src-tauri/src/storage/models.rs
+- [x] T018 [US1] Create ProfileSetup React component in src/components/ProfileSetup/
+- [x] T019 [US1] Create form UI for health profile in src/components/ProfileSetup/ProfileForm.tsx
+- [x] T020 [US1] Implement form validation and submission in src/components/ProfileSetup/ProfileForm.tsx
+- [x] T021 [US1] Connect frontend to backend using Tauri commands in src/components/ProfileSetup/ProfileForm.tsx
+- [x] T022 [US1] Add data persistence and retrieval functionality to ProfileForm component
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
