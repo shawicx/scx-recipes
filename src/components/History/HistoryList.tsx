@@ -43,17 +43,35 @@ const HistoryList: React.FC = () => {
           endDate: filters.endDate || undefined,
           mealType: filters.mealType || undefined,
         };
-        const totalCount = await getDietHistoryCount(countParams);
-        const calculatedTotalPages = Math.ceil(totalCount / limit);
-        setTotalPages(calculatedTotalPages);
+        
+        try {
+          const totalCount = await getDietHistoryCount(countParams);
+          const calculatedTotalPages = Math.ceil(totalCount / limit);
+          setTotalPages(calculatedTotalPages);
+        } catch (countError) {
+          console.warn('Failed to get count, will use basic pagination:', countError);
+          setTotalPages(1); // 设置默认页数，如果无法获取总数
+        }
 
         const data = await getDietHistory(params);
         setHistory(data);
         
+        // 如果没有获取到准确的总数，根据返回的数据调整分页
+        if (data.length === limit) {
+          setTotalPages(Math.max(currentPage + 1, totalPages));
+        } else if (data.length < limit && currentPage === 1) {
+          setTotalPages(1);
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error('Error fetching diet history:', err);
-        setError('Failed to load diet history');
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('not found') || errorMessage.includes('未找到')) {
+          setError('暂无饮食历史数据');
+        } else {
+          setError('加载饮食历史失败，请稍后重试');
+        }
         setLoading(false);
       }
     };
@@ -93,27 +111,99 @@ const HistoryList: React.FC = () => {
       })
       .catch(err => {
         console.error('Error fetching diet history:', err);
-        setError('Failed to load diet history');
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('not found') || errorMessage.includes('未找到')) {
+          setError('暂无饮食历史数据');
+        } else {
+          setError('加载饮食历史失败，请稍后重试');
+        }
       });
   };
 
   if (loading) {
-    return <div className="loading">Loading diet history...</div>;
+    return <div className="loading">正在加载饮食历史...</div>;
   }
 
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    const fetchHistory = async () => {
+      try {
+        const userId = localStorage.getItem('userId') || 'default-user';
+        const params: GetHistoryParams = {
+          userId,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+          limit: limit,
+          offset: (currentPage - 1) * limit,
+        };
+
+        if (filters.mealType) {
+          params.mealType = filters.mealType as any;
+        }
+
+        const countParams = {
+          userId,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+          mealType: filters.mealType || undefined,
+        };
+        
+        try {
+          const totalCount = await getDietHistoryCount(countParams);
+          const calculatedTotalPages = Math.ceil(totalCount / limit);
+          setTotalPages(calculatedTotalPages);
+        } catch (countError) {
+          console.warn('Failed to get count, will use basic pagination:', countError);
+          setTotalPages(1);
+        }
+
+        const data = await getDietHistory(params);
+        setHistory(data);
+        
+        if (data.length === limit) {
+          setTotalPages(Math.max(currentPage + 1, totalPages));
+        } else if (data.length < limit && currentPage === 1) {
+          setTotalPages(1);
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching diet history:', err);
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('not found') || errorMessage.includes('未找到')) {
+          setError('暂无饮食历史数据');
+        } else {
+          setError('加载饮食历史失败，请稍后重试');
+        }
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  };
+
   if (error) {
-    return <div className="error">Error: {error}</div>;
+    return (
+      <div className="error-container">
+        <div className="error">错误: {error}</div>
+        <div className="error-actions">
+          <button onClick={handleRetry} className="btn-secondary">
+            重试
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="history-list">
       <div className="history-header">
-        <h2>Your Diet History</h2>
+        <h2>您的饮食历史</h2>
         <button 
           className="btn-primary" 
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? 'Cancel' : 'Add New Entry'}
+          {showForm ? '取消' : '添加新记录'}
         </button>
       </div>
 
@@ -126,7 +216,7 @@ const HistoryList: React.FC = () => {
       {/* Filters */}
       <div className="filters">
         <div className="filter-group">
-          <label htmlFor="startDate">Start Date:</label>
+          <label htmlFor="startDate">开始日期:</label>
           <input
             type="date"
             id="startDate"
@@ -136,7 +226,7 @@ const HistoryList: React.FC = () => {
           />
         </div>
         <div className="filter-group">
-          <label htmlFor="endDate">End Date:</label>
+          <label htmlFor="endDate">结束日期:</label>
           <input
             type="date"
             id="endDate"
@@ -146,39 +236,39 @@ const HistoryList: React.FC = () => {
           />
         </div>
         <div className="filter-group">
-          <label htmlFor="mealType">Meal Type:</label>
+          <label htmlFor="mealType">餐点类型:</label>
           <select
             id="mealType"
             name="mealType"
             value={filters.mealType}
             onChange={handleFilterChange}
           >
-            <option value="">All Types</option>
-            <option value="breakfast">Breakfast</option>
-            <option value="lunch">Lunch</option>
-            <option value="dinner">Dinner</option>
-            <option value="snack">Snack</option>
+            <option value="">所有类型</option>
+            <option value="breakfast">早餐</option>
+            <option value="lunch">午餐</option>
+            <option value="dinner">晚餐</option>
+            <option value="snack">零食</option>
           </select>
         </div>
       </div>
 
       {history.length === 0 ? (
-        <div className="no-history">No diet history entries found.</div>
+        <div className="no-history">未找到饮食历史记录。</div>
       ) : (
         <>
           <div className="history-grid">
             {history.map((entry) => (
               <div key={entry.id} className="history-entry">
-                <h3>{entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1)} on {entry.dateAttempted}</h3>
+                <h3>{entry.mealType === 'breakfast' ? '早餐' : entry.mealType === 'lunch' ? '午餐' : entry.mealType === 'dinner' ? '晚餐' : '零食'} - {entry.dateAttempted}</h3>
                 <div className="entry-details">
                   <div className="rating">
-                    Rating: {entry.rating ? '★'.repeat(entry.rating) : 'Not rated'}
+                    评分: {entry.rating ? '★'.repeat(entry.rating) : '未评分'}
                   </div>
                   <div className="notes">
-                    {entry.notes && <p><strong>Notes:</strong> {entry.notes}</p>}
+                    {entry.notes && <p><strong>备注:</strong> {entry.notes}</p>}
                   </div>
                   <div className="preparation">
-                    <strong>Prepared:</strong> {entry.wasPrepared ? 'Yes' : 'No'}
+                    <strong>已准备:</strong> {entry.wasPrepared ? '是' : '否'}
                   </div>
                 </div>
               </div>
@@ -191,14 +281,14 @@ const HistoryList: React.FC = () => {
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
-              Previous
+              上一页
             </button>
-            <span>Page {currentPage} of {totalPages}</span>
+            <span>第 {currentPage} 页，共 {totalPages} 页</span>
             <button 
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
             >
-              Next
+              下一页
             </button>
           </div>
         </>

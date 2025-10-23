@@ -97,7 +97,15 @@ impl Database {
 
     // Health Profile operations
     pub fn save_health_profile(&self, profile: &HealthProfile) -> AppResult<()> {
-        let conn = Connection::open(&self.path)?;
+        // Ensure the database directory exists before attempting to save
+        if let Some(parent) = self.path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| crate::AppError::Database(format!("Failed to create database directory: {}", e)))?;
+        }
+
+        let conn = Connection::open(&self.path)
+            .map_err(|e| crate::AppError::Database(format!("Failed to connect to database: {}", e)))?;
+        
         conn.execute(
             "INSERT INTO health_profiles (id, user_id, age, gender, weight, height, activity_level, health_goals, dietary_preferences, dietary_restrictions, allergies, created_at, updated_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
@@ -120,14 +128,14 @@ impl Database {
                 profile.weight,
                 profile.height,
                 &profile.activity_level,
-                serde_json::to_string(&profile.health_goals).map_err(|e| crate::AppError::Database(e.to_string()))?,
-                serde_json::to_string(&profile.dietary_preferences).map_err(|e| crate::AppError::Database(e.to_string()))?,
-                serde_json::to_string(&profile.dietary_restrictions).map_err(|e| crate::AppError::Database(e.to_string()))?,
-                serde_json::to_string(&profile.allergies).map_err(|e| crate::AppError::Database(e.to_string()))?,
+                serde_json::to_string(&profile.health_goals).map_err(|e| crate::AppError::Database(format!("Failed to serialize health goals: {}", e)))?,
+                serde_json::to_string(&profile.dietary_preferences).map_err(|e| crate::AppError::Database(format!("Failed to serialize dietary preferences: {}", e)))?,
+                serde_json::to_string(&profile.dietary_restrictions).map_err(|e| crate::AppError::Database(format!("Failed to serialize dietary restrictions: {}", e)))?,
+                serde_json::to_string(&profile.allergies).map_err(|e| crate::AppError::Database(format!("Failed to serialize allergies: {}", e)))?,
                 profile.created_at.to_rfc3339(),
                 profile.updated_at.to_rfc3339(),
             ),
-        ).map_err(|e| crate::AppError::Database(e.to_string()))?;
+        ).map_err(|e| crate::AppError::Database(format!("Database execution failed: {}", e)))?;
         Ok(())
     }
 

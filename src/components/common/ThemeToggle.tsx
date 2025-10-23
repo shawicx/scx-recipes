@@ -18,18 +18,30 @@ const ThemeToggle: React.FC = () => {
   const getThemeIcon = () => {
     switch (theme) {
       case "light":
-        return "☀️"; // Sun icon for light theme
+        return "☀️"; // 浅色主题太阳图标
       case "dark":
-        return "🌙"; // Moon icon for dark theme
+        return "🌙"; // 深色主题月亮图标
       case "system":
       default:
-        return "💻"; // Computer screen for system theme
+        return "💻"; // 系统主题电脑图标
+    }
+  };
+
+  const getThemeText = () => {
+    switch (theme) {
+      case "light":
+        return "浅色";
+      case "dark":
+        return "深色";
+      case "system":
+      default:
+        return "系统";
     }
   };
 
   return (
     <Button variant="secondary" size="small" onClick={toggleTheme}>
-      {getThemeIcon()} {theme.charAt(0).toUpperCase() + theme.slice(1)}
+      {getThemeIcon()} {getThemeText()}
     </Button>
   );
 };

@@ -63,7 +63,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error("useTheme 必须在 ThemeProvider 内使用");
   }
   return context;
 };

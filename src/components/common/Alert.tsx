@@ -29,7 +29,7 @@ const Alert: React.FC<AlertProps> = ({
         <button
           className="alert__close-btn"
           onClick={onClose}
-          aria-label="Close alert"
+          aria-label="关闭提示"
         >
           &times;
         </button>

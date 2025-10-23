@@ -13,23 +13,23 @@ function App() {
       <ErrorProvider>
         <div className="app-container">
           <header className="app-header">
-            <h1>Smart Diet Assistant</h1>
+            <h1>智能饮食助手</h1>
             <ThemeToggle />
           </header>
 
           <main className="app-main">
             <div className="app-section">
-              <h2>Health Profile</h2>
+              <h2>健康档案</h2>
               <ProfileSetup />
             </div>
 
             <div className="app-section">
-              <h2>Diet Recommendations</h2>
+              <h2>饮食推荐</h2>
               <Recommendations />
             </div>
 
             <div className="app-section">
-              <h2>Diet History</h2>
+              <h2>饮食记录</h2>
               <History />
             </div>
           </main>

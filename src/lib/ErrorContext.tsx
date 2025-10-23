@@ -70,7 +70,7 @@ export const ErrorProvider: React.FC<ErrorProviderProps> = ({ children }) => {
 export const useErrorState = () => {
   const context = useContext(ErrorStateContext);
   if (context === undefined) {
-    throw new Error("useErrorState must be used within an ErrorProvider");
+    throw new Error("useErrorState 必须在 ErrorProvider 内使用");
   }
   return context;
 };
@@ -78,7 +78,7 @@ export const useErrorState = () => {
 export const useErrorDispatch = () => {
   const context = useContext(ErrorDispatchContext);
   if (context === undefined) {
-    throw new Error("useErrorDispatch must be used within an ErrorProvider");
+    throw new Error("useErrorDispatch 必须在 ErrorProvider 内使用");
   }
   return context;
 };
