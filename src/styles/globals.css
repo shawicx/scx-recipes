@@ -1,27 +1,240 @@
 :root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  /* 优化中文字体栈 - 系统字体优先，确保各平台中文显示效果 */
+  font-family: 
+    -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+    "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei",
+    Inter, Avenir, sans-serif;
+  
   font-size: 16px;
-  line-height: 24px;
+  /* 中文优化行高 - 提供更好的阅读体验 */
+  line-height: 1.7;
   font-weight: 400;
+  
+  /* 中文字符间距优化 */
+  letter-spacing: 0.025em;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
   font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  /* 中文字体渲染优化 */
+  text-rendering: optimizeSpeed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  
+  /* 中文字体特殊优化 */
+  font-feature-settings: "kern" 1;
+  font-kerning: auto;
+}
+
+/* Light theme variables */
+.light {
+  color: #213547;
+  background-color: #ffffff;
+}
+
+.light a:hover {
+  color: #747bff;
+}
+
+.light input,
+.light button {
+  background-color: #f9f9f9;
+  color: #0f0f0f;
+  border: 1px solid #ddd;
+}
+
+/* Dark theme variables */
+.dark {
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+}
+
+.dark a:hover {
+  color: #535bf2;
+}
+
+.dark input,
+.dark button {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #555;
+}
+
+/* Common styles that apply to all themes */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(90deg, #646cff, #24c8db, #61dafb) 1;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.app-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.app-section {
+  background-color: var(--section-bg, #f9f9f9);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.app-section h2 {
+  margin-top: 0;
+  color: var(--accent-color, #646cff);
+  border-bottom: 2px solid var(--accent-color, #646cff);
+  padding-bottom: 0.5rem;
+}
+
+/* Theme-specific variables */
+.light .app-section {
+  --section-bg: #f9f9f9;
+  --accent-color: #646cff;
+}
+
+.dark .app-section {
+  --section-bg: #2a2a2a;
+  --accent-color: #535bf2;
 }
 
 .container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  line-height: 1.6;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* 文档内容样式 */
+.container p {
+  margin: 1rem 0;
+  font-size: 1rem;
+  color: inherit;
+}
+
+.container h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem 0;
+  color: #646cff;
+  border-bottom: 3px solid #646cff;
+  padding-bottom: 0.5rem;
+}
+
+.container h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 1.8rem 0 1rem 0;
+  color: #535bf2;
+  border-left: 4px solid #535bf2;
+  padding-left: 1rem;
+}
+
+.container h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.8rem 0;
+  color: #24c8db;
+}
+
+.container h4 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 1.2rem 0 0.6rem 0;
+}
+
+.container strong {
+  font-weight: 600;
+  color: #646cff;
+}
+
+.container hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, #646cff, #24c8db, #61dafb);
+  margin: 2rem 0;
+  border-radius: 1px;
+}
+
+.container ul,
+.container ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.container ul li,
+.container ol li {
+  margin: 0.5rem 0;
+  position: relative;
+}
+
+.container ul li::marker {
+  color: #646cff;
+}
+
+.container ol li::marker {
+  color: #535bf2;
+  font-weight: 600;
+}
+
+.container ul ul,
+.container ol ul,
+.container ul ol,
+.container ol ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.container ul ul li::marker {
+  color: #24c8db;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .container h1 {
+    font-size: 2rem;
+  }
+
+  .container h2 {
+    font-size: 1.5rem;
+  }
+
+  .container h3 {
+    font-size: 1.25rem;
+  }
 }
 
 .logo {
@@ -53,22 +266,99 @@ a:hover {
   color: #535bf2;
 }
 
-h1 {
-  text-align: center;
+/* 中文标题优化 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0.8em 0 0.5em 0;
+  /* 中文标题字间距 */
+  letter-spacing: 0.05em;
+  /* 避免中英文混排时的问题 */
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
+h1 {
+  text-align: center;
+  font-size: 2.2em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+h2 {
+  font-size: 1.8em;
+  font-weight: 650;
+}
+
+h3 {
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+/* 中文段落优化 */
+p {
+  margin: 1em 0;
+  line-height: 1.8;
+  /* 中文段落首行缩进 */
+  text-indent: 0;
+  /* 中文字符间距 */
+  letter-spacing: 0.02em;
+  word-spacing: 0.1em;
+}
+
+/* 中文表单优化 */
 input,
-button {
+button,
+select,
+textarea {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
+  padding: 0.7em 1.3em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   color: #0f0f0f;
   background-color: #ffffff;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, box-shadow 0.25s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  
+  /* 中文输入优化 */
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  
+  /* 确保中文输入法兼容 */
+  ime-mode: auto;
+}
+
+/* 中文按钮优化 */
+button {
+  min-height: 44px; /* 触摸友好的最小高度 */
+  padding: 0.8em 1.6em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  
+  /* 中文按钮文字居中 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 中文文本域优化 */
+textarea {
+  line-height: 1.8;
+  padding: 1em;
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* 中文选择框优化 */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1em center;
+  background-size: 1em;
+  padding-right: 3em;
 }
 
 button {
@@ -93,6 +383,110 @@ button {
   text-align: center;
 }
 
+/* 添加悬停效果和过渡动画 */
+.container h1, .container h2, .container h3 {
+  transition: all 0.3s ease;
+}
+
+.container h1:hover {
+  color: #747bff;
+  text-shadow: 0 2px 8px rgba(100, 108, 255, 0.3);
+}
+
+.container h2:hover {
+  color: #6366f1;
+  transform: translateX(5px);
+}
+
+.container h3:hover {
+  color: #06b6d4;
+  transform: scale(1.02);
+}
+
+.container ul li, .container ol li {
+  transition: all 0.2s ease;
+  padding: 0.2rem 0;
+}
+
+.container ul li:hover, .container ol li:hover {
+  background: rgba(100, 108, 255, 0.1);
+  border-radius: 4px;
+  padding-left: 0.5rem;
+  transform: translateX(5px);
+}
+
+.container strong {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.container strong:hover {
+  color: #747bff;
+  text-shadow: 0 1px 4px rgba(100, 108, 255, 0.4);
+}
+
+/* 添加代码块样式 */
+.container code {
+  background: rgba(100, 108, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  border: 1px solid rgba(100, 108, 255, 0.2);
+}
+
+/* 添加引用块样式 */
+.container blockquote {
+  border-left: 4px solid #646cff;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  background: rgba(100, 108, 255, 0.05);
+  padding: 1rem;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+}
+
+/* 添加入场动画 */
+.container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 改进响应式设计 */
+@media (max-width: 480px) {
+  .container {
+    padding: 0.8rem;
+    margin: 0.5rem;
+    border-radius: 12px;
+  }
+  
+  .container h1 {
+    font-size: 1.8rem;
+  }
+  
+  .container h2 {
+    font-size: 1.3rem;
+  }
+  
+  .container h3 {
+    font-size: 1.1rem;
+  }
+  
+  .container ul, .container ol {
+    padding-left: 1.5rem;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -106,5 +500,161 @@ button {
   input,
   button {
     background-color: #f9f9f9;
+  }
+  
+  .container {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  }
+  
+  .container hr {
+    background: linear-gradient(90deg, #646cff, #24c8db, #61dafb);
+  }
+  
+  .container ul li:hover, .container ol li:hover {
+    background: rgba(100, 108, 255, 0.08);
+  }
+  
+  .container code {
+    background: rgba(100, 108, 255, 0.08);
+    border: 1px solid rgba(100, 108, 255, 0.15);
+  }
+}
+
+/* ===== 中文优化专用样式 ===== */
+
+/* 中文列表优化 */
+ul, ol {
+  line-height: 1.8;
+  margin: 1.2em 0;
+}
+
+ul li, ol li {
+  margin: 0.6em 0;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+/* 中文标签和标签组 */
+.chinese-label {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+}
+
+/* 中文错误和状态消息 */
+.error, .success, .warning, .info {
+  padding: 1em 1.2em;
+  border-radius: 8px;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* 中文卡片组件优化 */
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5em;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+/* 中文导航和菜单 */
+.nav-item, .menu-item {
+  padding: 0.7em 1.2em;
+  line-height: 1.6;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+}
+
+/* 中文按钮变体 */
+.btn-primary {
+  background: linear-gradient(135deg, #646cff, #747bff);
+  color: white;
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.8em 1.8em;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #747bff, #646cff);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(100, 108, 255, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  padding: 0.7em 1.5em;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 中文加载状态 */
+.loading {
+  text-align: center;
+  padding: 2em;
+  font-size: 1.1em;
+  letter-spacing: 0.05em;
+  color: #646cff;
+}
+
+/* 中文响应式字体缩放 */
+@media (max-width: 768px) {
+  :root {
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.6em; }
+  h3 { font-size: 1.3em; }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 14px;
+    line-height: 1.9;
+    letter-spacing: 0.03em;
+  }
+  
+  .btn-primary, .btn-secondary {
+    padding: 0.9em 1.5em;
+    font-size: 1.05em;
   }
 }

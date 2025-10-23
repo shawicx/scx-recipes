@@ -97,7 +97,15 @@ impl Database {
 
     // Health Profile operations
     pub fn save_health_profile(&self, profile: &HealthProfile) -> AppResult<()> {
-        let conn = Connection::open(&self.path)?;
+        // Ensure the database directory exists before attempting to save
+        if let Some(parent) = self.path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| crate::AppError::Database(format!("Failed to create database directory: {}", e)))?;
+        }
+
+        let conn = Connection::open(&self.path)
+            .map_err(|e| crate::AppError::Database(format!("Failed to connect to database: {}", e)))?;
+        
         conn.execute(
             "INSERT INTO health_profiles (id, user_id, age, gender, weight, height, activity_level, health_goals, dietary_preferences, dietary_restrictions, allergies, created_at, updated_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
@@ -120,14 +128,14 @@ impl Database {
                 profile.weight,
                 profile.height,
                 &profile.activity_level,
-                serde_json::to_string(&profile.health_goals).map_err(|e| crate::AppError::Database(e.to_string()))?,
-                serde_json::to_string(&profile.dietary_preferences).map_err(|e| crate::AppError::Database(e.to_string()))?,
-                serde_json::to_string(&profile.dietary_restrictions).map_err(|e| crate::AppError::Database(e.to_string()))?,
-                serde_json::to_string(&profile.allergies).map_err(|e| crate::AppError::Database(e.to_string()))?,
+                serde_json::to_string(&profile.health_goals).map_err(|e| crate::AppError::Database(format!("Failed to serialize health goals: {}", e)))?,
+                serde_json::to_string(&profile.dietary_preferences).map_err(|e| crate::AppError::Database(format!("Failed to serialize dietary preferences: {}", e)))?,
+                serde_json::to_string(&profile.dietary_restrictions).map_err(|e| crate::AppError::Database(format!("Failed to serialize dietary restrictions: {}", e)))?,
+                serde_json::to_string(&profile.allergies).map_err(|e| crate::AppError::Database(format!("Failed to serialize allergies: {}", e)))?,
                 profile.created_at.to_rfc3339(),
                 profile.updated_at.to_rfc3339(),
             ),
-        ).map_err(|e| crate::AppError::Database(e.to_string()))?;
+        ).map_err(|e| crate::AppError::Database(format!("Database execution failed: {}", e)))?;
         Ok(())
     }
 
@@ -319,17 +327,23 @@ impl Database {
         end_date: Option<&str>,
         limit: Option<u32>,
         offset: Option<u32>,
+        meal_type: Option<&str>, // New parameter for filtering by meal type
     ) -> AppResult<Vec<DietHistory>> {
         let conn = Connection::open(&self.path)?;
         // Build the query with optional date filtering
         let mut query = "SELECT id, user_id, diet_item_id, date_attempted, rating, notes, was_prepared, meal_type, created_at, updated_at FROM diet_history WHERE user_id = ?1".to_string();
+        let mut param_counter = 2; // Start from 2 since user_id is parameter 1
 
         if start_date.is_some() {
-            query.push_str(" AND date_attempted >= ?2");
+            query.push_str(&format!(" AND date_attempted >= ?{}", param_counter));
+            param_counter += 1;
         }
         if end_date.is_some() {
-            let start_param_count = if start_date.is_some() { 3 } else { 2 };
-            query.push_str(&format!(" AND date_attempted <= ?{}", start_param_count));
+            query.push_str(&format!(" AND date_attempted <= ?{}", param_counter));
+            param_counter += 1;
+        }
+        if meal_type.is_some() {
+            query.push_str(&format!(" AND meal_type = ?{}", param_counter));
         }
 
         query.push_str(" ORDER BY date_attempted DESC");
@@ -355,6 +369,9 @@ impl Database {
             }
             if let Some(end) = end_date {
                 p.push(Box::new(end.to_owned()));
+            }
+            if let Some(meal) = meal_type {
+                p.push(Box::new(meal.to_owned()));
             }
             p
         };
@@ -390,6 +407,52 @@ impl Database {
             .map_err(|e| crate::AppError::Database(e.to_string()))?;
 
         Ok(history)
+    }
+
+    pub fn get_diet_history_count(
+        &self,
+        user_id: &str,
+        start_date: Option<&str>,
+        end_date: Option<&str>,
+        meal_type: Option<&str>,
+    ) -> AppResult<u32> {
+        let conn = Connection::open(&self.path)?;
+        let mut query = "SELECT COUNT(*) FROM diet_history WHERE user_id = ?1".to_string();
+        let mut param_counter = 2; // Start from 2 since user_id is parameter 1
+
+        if start_date.is_some() {
+            query.push_str(&format!(" AND date_attempted >= ?{}", param_counter));
+            param_counter += 1;
+        }
+        if end_date.is_some() {
+            query.push_str(&format!(" AND date_attempted <= ?{}", param_counter));
+            param_counter += 1;
+        }
+        if meal_type.is_some() {
+            query.push_str(&format!(" AND meal_type = ?{}", param_counter));
+        }
+
+        let params: Vec<Box<dyn rusqlite::ToSql>> = {
+            let mut p: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(user_id.to_owned())];
+            if let Some(start) = start_date {
+                p.push(Box::new(start.to_owned()));
+            }
+            if let Some(end) = end_date {
+                p.push(Box::new(end.to_owned()));
+            }
+            if let Some(meal) = meal_type {
+                p.push(Box::new(meal.to_owned()));
+            }
+            p
+        };
+
+        let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|b| b.as_ref()).collect();
+
+        let count: i32 = conn
+            .query_row(&query, param_refs.as_slice(), |row| row.get(0))
+            .map_err(|e| crate::AppError::Database(e.to_string()))?;
+
+        Ok(count as u32)
     }
 
     pub fn update_diet_entry(

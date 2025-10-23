@@ -1,0 +1,251 @@
+[
+  {
+    "id": "1",
+    "title": "Vegetable Stir Fry",
+    "description": "A healthy and quick vegetable stir fry with tofu",
+    "ingredients": [
+      {
+        "name": "Tofu",
+        "amount": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Broccoli",
+        "amount": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Bell Pepper",
+        "amount": 1,
+        "unit": "unit",
+        "optional": false
+      },
+      {
+        "name": "Carrot",
+        "amount": 2,
+        "unit": "unit",
+        "optional": false
+      },
+      {
+        "name": "Soy Sauce",
+        "amount": 2,
+        "unit": "tbsp",
+        "optional": false
+      }
+    ],
+    "nutritional_info_per_serving": {
+      "calories": 280,
+      "protein": 18,
+      "carbs": 22,
+      "fat": 14,
+      "fiber": 6
+    },
+    "preparation_time": 20,
+    "difficulty_level": "easy",
+    "meal_type": "lunch",
+    "recipe_instructions": "1. Press and cube the tofu. 2. Chop all vegetables. 3. Heat oil in a pan and fry tofu until golden. 4. Add vegetables and stir fry for 5-7 minutes. 5. Add soy sauce and cook for another 2 minutes.",
+    "cuisine_type": "Asian",
+    "seasonal": false,
+    "tags": ["vegetarian", "low_carb", "high_protein"]
+  },
+  {
+    "id": "2",
+    "title": "Chicken Salad",
+    "description": "Fresh and healthy grilled chicken salad",
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "amount": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Lettuce",
+        "amount": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "amount": 125,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Cucumber",
+        "amount": 0.5,
+        "unit": "unit",
+        "optional": false
+      },
+      {
+        "name": "Olive Oil",
+        "amount": 1,
+        "unit": "tbsp",
+        "optional": false
+      }
+    ],
+    "nutritional_info_per_serving": {
+      "calories": 320,
+      "protein": 35,
+      "carbs": 8,
+      "fat": 16,
+      "fiber": 3
+    },
+    "preparation_time": 25,
+    "difficulty_level": "easy",
+    "meal_type": "lunch",
+    "recipe_instructions": "1. Grill chicken breast until cooked through. 2. Chop vegetables. 3. Combine all ingredients in a bowl. 4. Drizzle with olive oil and season to taste.",
+    "cuisine_type": "Western",
+    "seasonal": false,
+    "tags": ["high_protein", "low_carb"]
+  },
+  {
+    "id": "3",
+    "title": "Oatmeal with Berries",
+    "description": "Nutritious breakfast with oats and fresh berries",
+    "ingredients": [
+      {
+        "name": "Oats",
+        "amount": 40,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Milk",
+        "amount": 200,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Mixed Berries",
+        "amount": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Honey",
+        "amount": 1,
+        "unit": "tsp",
+        "optional": false
+      }
+    ],
+    "nutritional_info_per_serving": {
+      "calories": 290,
+      "protein": 10,
+      "carbs": 48,
+      "fat": 6,
+      "fiber": 7
+    },
+    "preparation_time": 10,
+    "difficulty_level": "easy",
+    "meal_type": "breakfast",
+    "recipe_instructions": "1. Cook oats with milk according to package instructions. 2. Top with fresh berries. 3. Drizzle with honey if desired.",
+    "cuisine_type": "Western",
+    "seasonal": false,
+    "tags": ["vegetarian", "high_fiber", "breakfast"]
+  },
+  {
+    "id": "4",
+    "title": "Lentil Soup",
+    "description": "Hearty and nutritious lentil soup",
+    "ingredients": [
+      {
+        "name": "Red Lentils",
+        "amount": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Carrots",
+        "amount": 2,
+        "unit": "unit",
+        "optional": false
+      },
+      {
+        "name": "Celery",
+        "amount": 2,
+        "unit": "stalks",
+        "optional": false
+      },
+      {
+        "name": "Onion",
+        "amount": 1,
+        "unit": "unit",
+        "optional": false
+      },
+      {
+        "name": "Vegetable Stock",
+        "amount": 750,
+        "unit": "ml",
+        "optional": false
+      }
+    ],
+    "nutritional_info_per_serving": {
+      "calories": 260,
+      "protein": 16,
+      "carbs": 42,
+      "fat": 2,
+      "fiber": 12
+    },
+    "preparation_time": 35,
+    "difficulty_level": "medium",
+    "meal_type": "lunch",
+    "recipe_instructions": "1. Sauté onion, carrots, and celery. 2. Add lentils and stock. 3. Simmer for 25 minutes until lentils are soft. 4. Season to taste.",
+    "cuisine_type": "European",
+    "seasonal": true,
+    "tags": ["vegetarian", "vegan", "high_fiber", "high_protein"]
+  },
+  {
+    "id": "5",
+    "title": "Salmon with Quinoa",
+    "description": "Baked salmon with quinoa and steamed vegetables",
+    "ingredients": [
+      {
+        "name": "Salmon Fillet",
+        "amount": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Quinoa",
+        "amount": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Broccoli",
+        "amount": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Lemon",
+        "amount": 0.5,
+        "unit": "unit",
+        "optional": false
+      },
+      {
+        "name": "Olive Oil",
+        "amount": 1,
+        "unit": "tbsp",
+        "optional": false
+      }
+    ],
+    "nutritional_info_per_serving": {
+      "calories": 480,
+      "protein": 38,
+      "carbs": 35,
+      "fat": 22,
+      "fiber": 5
+    },
+    "preparation_time": 30,
+    "difficulty_level": "medium",
+    "meal_type": "dinner",
+    "recipe_instructions": "1. Preheat oven to 200°C. 2. Season salmon and bake for 15-20 minutes. 3. Cook quinoa according to package instructions. 4. Steam broccoli. 5. Serve together with lemon and olive oil.",
+    "cuisine_type": "European",
+    "seasonal": false,
+    "tags": ["high_protein", "high_omega3", "balanced"]
+  }
+]
