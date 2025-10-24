@@ -9,6 +9,11 @@ interface RecommendationCardProps {
 const RecommendationCard: React.FC<RecommendationCardProps> = ({
   recommendation,
 }) => {
+  // Safety check to handle potential undefined recommendations
+  if (!recommendation) {
+    return <div>推荐信息不可用</div>;
+  }
+  
   const [showDetails, setShowDetails] = useState(false);
   const [isMarkedAsTried, setIsMarkedAsTried] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
@@ -44,36 +49,41 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
   // Format nutritional info for display
   const formatNutritionalInfo = () => {
+    // Check if nutritional_info exists to prevent errors
+    if (!recommendation.nutritionalInfo) {
+      return <div className="nutritional-info">营养信息不可用</div>;
+    }
+    
     return (
       <div className="nutritional-info">
         <div className="nutrition-item">
           <span className="nutrition-label">热量:</span>
           <span className="nutrition-value">
-            {recommendation.nutritional_info.calories} kcal
+            {recommendation.nutritionalInfo.calories} 千卡
           </span>
         </div>
         <div className="nutrition-item">
           <span className="nutrition-label">蛋白质:</span>
           <span className="nutrition-value">
-            {recommendation.nutritional_info.protein}g
+            {recommendation.nutritionalInfo.protein}g
           </span>
         </div>
         <div className="nutrition-item">
-          <span className="nutrition-label">碳水:</span>
+          <span className="nutrition-label">碳水化合物:</span>
           <span className="nutrition-value">
-            {recommendation.nutritional_info.carbs}g
+            {recommendation.nutritionalInfo.carbs}g
           </span>
         </div>
         <div className="nutrition-item">
           <span className="nutrition-label">脂肪:</span>
           <span className="nutrition-value">
-            {recommendation.nutritional_info.fat}g
+            {recommendation.nutritionalInfo.fat}g
           </span>
         </div>
         <div className="nutrition-item">
           <span className="nutrition-label">纤维:</span>
           <span className="nutrition-value">
-            {recommendation.nutritional_info.fiber}g
+            {recommendation.nutritionalInfo.fiber}g
           </span>
         </div>
       </div>
@@ -82,6 +92,11 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
   // Format ingredients list
   const formatIngredients = () => {
+    // Check if ingredients exist to prevent errors
+    if (!recommendation.ingredients) {
+      return <li>配料信息不可用</li>;
+    }
+    
     return recommendation.ingredients.map((ingredient, index) => (
       <li key={index}>
         {ingredient.amount} {ingredient.unit} {ingredient.name}
@@ -91,7 +106,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
   // Calculate relevance indicator
   const relevanceIndicator = () => {
-    const score = recommendation.relevance_score;
+    const score = recommendation.relevanceScore;
     if (score >= 0.8) {
       return <span className="relevance-high">强烈推荐</span>;
     } else if (score >= 0.5) {
@@ -115,18 +130,18 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
           <div className="meta-item">
             <span className="meta-label">准备时间:</span>
             <span className="meta-value">
-              {recommendation.preparation_time} 分钟
+              {recommendation.preparationTime} 分钟
             </span>
           </div>
           <div className="meta-item">
             <span className="meta-label">难度:</span>
             <span className="meta-value">
-              {recommendation.difficulty_level}
+              {recommendation.difficultyLevel}
             </span>
           </div>
           <div className="meta-item">
             <span className="meta-label">餐点类型:</span>
-            <span className="meta-value">{recommendation.meal_type}</span>
+            <span className="meta-value">{recommendation.mealType}</span>
           </div>
         </div>
 
@@ -139,7 +154,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
             {formatNutritionalInfo()}
 
             <h4>制作步骤:</h4>
-            <p className="instructions">{recommendation.recipe_instructions}</p>
+            <p className="instructions">{recommendation.recipeInstructions}</p>
           </div>
         )}
       </div>

@@ -36,12 +36,22 @@ const ProfileForm: React.FC = () => {
     const loadProfile = async () => {
       setIsLoading(true);
       try {
-        // Using a default user ID for this example - in a real app, this would be the logged-in user
-        const userId = "current-user";
+        // 使用统一的用户ID管理
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+          userId = "current-user";
+          localStorage.setItem('userId', userId);
+        }
         const loadedProfile = await getHealthProfile(userId);
         if (loadedProfile) {
           setExistingProfile(loadedProfile);
           setProfile(loadedProfile);
+        } else {
+          // 如果没有现有档案，设置默认用户ID
+          setProfile(prev => ({
+            ...prev,
+            userId: userId
+          }));
         }
       } catch (err) {
         const errorMessage =
@@ -144,7 +154,7 @@ const ProfileForm: React.FC = () => {
       // 清理和准备数据
       const profileToSave = {
         ...profile,
-        userId: profile.userId?.trim() || "current-user",
+        userId: profile.userId?.trim() || localStorage.getItem('userId') || "current-user",
         age: Number(profile.age),
         weight: Number(profile.weight),
         height: Number(profile.height),
@@ -177,6 +187,14 @@ const ProfileForm: React.FC = () => {
       
       // 刷新页面数据以显示更新后的档案
       setExistingProfile(profileToSave as any);
+      
+      // 确保用户ID已保存到localStorage，以便其他组件使用
+      localStorage.setItem('userId', profileToSave.userId);
+      
+      // 触发推荐组件刷新
+      window.dispatchEvent(new CustomEvent('profileUpdated', { 
+        detail: { userId: profileToSave.userId } 
+      }));
       
     } catch (err) {
       console.error("保存健康档案时出错:", err);

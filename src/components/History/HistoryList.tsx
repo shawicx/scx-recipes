@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { getDietHistory, getDietHistoryCount } from '../../lib/api';
-import { DietEntry, GetHistoryParams } from '../../lib/types';
-import HistoryEntryForm from './HistoryEntryForm';
+import React, { useState, useEffect } from "react";
+import { getDietHistory, getDietHistoryCount } from "../../lib/api";
+import { DietEntry, GetHistoryParams } from "../../lib/types";
+import HistoryEntryForm from "./HistoryEntryForm";
 
 const HistoryList: React.FC = () => {
   const [history, setHistory] = useState<DietEntry[]>([]);
@@ -11,9 +11,9 @@ const HistoryList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [filters, setFilters] = useState({
-    startDate: '',
-    endDate: '',
-    mealType: '',
+    startDate: "",
+    endDate: "",
+    mealType: "",
   });
   const [limit] = useState<number>(5); // Number of entries per page
 
@@ -22,7 +22,7 @@ const HistoryList: React.FC = () => {
     const fetchHistory = async () => {
       try {
         // In a real implementation, we'd get the user ID from context or storage
-        const userId = localStorage.getItem('userId') || 'default-user';
+        const userId = localStorage.getItem("userId") || "default-user";
         const params: GetHistoryParams = {
           userId,
           startDate: filters.startDate || undefined,
@@ -43,34 +43,40 @@ const HistoryList: React.FC = () => {
           endDate: filters.endDate || undefined,
           mealType: filters.mealType || undefined,
         };
-        
+
         try {
           const totalCount = await getDietHistoryCount(countParams);
           const calculatedTotalPages = Math.ceil(totalCount / limit);
           setTotalPages(calculatedTotalPages);
         } catch (countError) {
-          console.warn('Failed to get count, will use basic pagination:', countError);
+          console.warn(
+            "Failed to get count, will use basic pagination:",
+            countError,
+          );
           setTotalPages(1); // 设置默认页数，如果无法获取总数
         }
 
         const data = await getDietHistory(params);
         setHistory(data);
-        
+
         // 如果没有获取到准确的总数，根据返回的数据调整分页
         if (data.length === limit) {
           setTotalPages(Math.max(currentPage + 1, totalPages));
         } else if (data.length < limit && currentPage === 1) {
           setTotalPages(1);
         }
-        
+
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching diet history:', err);
+        console.error("Error fetching diet history:", err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        if (errorMessage.includes('not found') || errorMessage.includes('未找到')) {
-          setError('暂无饮食历史数据');
+        if (
+          errorMessage.includes("not found") ||
+          errorMessage.includes("未找到")
+        ) {
+          setError("暂无饮食历史数据");
         } else {
-          setError('加载饮食历史失败，请稍后重试');
+          setError("加载饮食历史失败，请稍后重试");
         }
         setLoading(false);
       }
@@ -79,11 +85,13 @@ const HistoryList: React.FC = () => {
     fetchHistory();
   }, [currentPage, filters, limit]);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     setCurrentPage(1); // Reset to first page when filters change
   };
@@ -91,7 +99,7 @@ const HistoryList: React.FC = () => {
   const handleFormSubmit = () => {
     setShowForm(false);
     // Refresh the history list after form submission
-    const userId = localStorage.getItem('userId') || 'default-user';
+    const userId = localStorage.getItem("userId") || "default-user";
     const params: GetHistoryParams = {
       userId,
       startDate: filters.startDate || undefined,
@@ -100,22 +108,25 @@ const HistoryList: React.FC = () => {
       offset: (currentPage - 1) * limit,
     };
 
-    // Only add mealType filter if it's specified  
+    // Only add mealType filter if it's specified
     if (filters.mealType) {
       params.mealType = filters.mealType as any;
     }
 
     getDietHistory(params)
-      .then(data => {
+      .then((data) => {
         setHistory(data);
       })
-      .catch(err => {
-        console.error('Error fetching diet history:', err);
+      .catch((err) => {
+        console.error("Error fetching diet history:", err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        if (errorMessage.includes('not found') || errorMessage.includes('未找到')) {
-          setError('暂无饮食历史数据');
+        if (
+          errorMessage.includes("not found") ||
+          errorMessage.includes("未找到")
+        ) {
+          setError("暂无饮食历史数据");
         } else {
-          setError('加载饮食历史失败，请稍后重试');
+          setError("加载饮食历史失败，请稍后重试");
         }
       });
   };
@@ -129,7 +140,7 @@ const HistoryList: React.FC = () => {
     setLoading(true);
     const fetchHistory = async () => {
       try {
-        const userId = localStorage.getItem('userId') || 'default-user';
+        const userId = localStorage.getItem("userId") || "default-user";
         const params: GetHistoryParams = {
           userId,
           startDate: filters.startDate || undefined,
@@ -148,33 +159,39 @@ const HistoryList: React.FC = () => {
           endDate: filters.endDate || undefined,
           mealType: filters.mealType || undefined,
         };
-        
+
         try {
           const totalCount = await getDietHistoryCount(countParams);
           const calculatedTotalPages = Math.ceil(totalCount / limit);
           setTotalPages(calculatedTotalPages);
         } catch (countError) {
-          console.warn('Failed to get count, will use basic pagination:', countError);
+          console.warn(
+            "Failed to get count, will use basic pagination:",
+            countError,
+          );
           setTotalPages(1);
         }
 
         const data = await getDietHistory(params);
         setHistory(data);
-        
+
         if (data.length === limit) {
           setTotalPages(Math.max(currentPage + 1, totalPages));
         } else if (data.length < limit && currentPage === 1) {
           setTotalPages(1);
         }
-        
+
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching diet history:', err);
+        console.error("Error fetching diet history:", err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        if (errorMessage.includes('not found') || errorMessage.includes('未找到')) {
-          setError('暂无饮食历史数据');
+        if (
+          errorMessage.includes("not found") ||
+          errorMessage.includes("未找到")
+        ) {
+          setError("暂无饮食历史数据");
         } else {
-          setError('加载饮食历史失败，请稍后重试');
+          setError("加载饮食历史失败，请稍后重试");
         }
         setLoading(false);
       }
@@ -198,12 +215,8 @@ const HistoryList: React.FC = () => {
   return (
     <div className="history-list">
       <div className="history-header">
-        <h2>您的饮食历史</h2>
-        <button 
-          className="btn-primary" 
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? '取消' : '添加新记录'}
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? "取消" : "添加新记录"}
         </button>
       </div>
 
@@ -259,16 +272,29 @@ const HistoryList: React.FC = () => {
           <div className="history-grid">
             {history.map((entry) => (
               <div key={entry.id} className="history-entry">
-                <h3>{entry.mealType === 'breakfast' ? '早餐' : entry.mealType === 'lunch' ? '午餐' : entry.mealType === 'dinner' ? '晚餐' : '零食'} - {entry.dateAttempted}</h3>
+                <h3>
+                  {entry.mealType === "breakfast"
+                    ? "早餐"
+                    : entry.mealType === "lunch"
+                      ? "午餐"
+                      : entry.mealType === "dinner"
+                        ? "晚餐"
+                        : "零食"}{" "}
+                  - {entry.dateAttempted}
+                </h3>
                 <div className="entry-details">
                   <div className="rating">
-                    评分: {entry.rating ? '★'.repeat(entry.rating) : '未评分'}
+                    评分: {entry.rating ? "★".repeat(entry.rating) : "未评分"}
                   </div>
                   <div className="notes">
-                    {entry.notes && <p><strong>备注:</strong> {entry.notes}</p>}
+                    {entry.notes && (
+                      <p>
+                        <strong>备注:</strong> {entry.notes}
+                      </p>
+                    )}
                   </div>
                   <div className="preparation">
-                    <strong>已准备:</strong> {entry.wasPrepared ? '是' : '否'}
+                    <strong>已准备:</strong> {entry.wasPrepared ? "是" : "否"}
                   </div>
                 </div>
               </div>
@@ -277,15 +303,19 @@ const HistoryList: React.FC = () => {
 
           {/* Pagination */}
           <div className="pagination">
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
               上一页
             </button>
-            <span>第 {currentPage} 页，共 {totalPages} 页</span>
-            <button 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            <span>
+              第 {currentPage} 页，共 {totalPages} 页
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
             >
               下一页
