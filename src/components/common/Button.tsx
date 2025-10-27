@@ -1,8 +1,7 @@
 import React from "react";
-import "./Button.css";
+import { Button as HeroUIButton, type ButtonProps as HeroUIButtonProps } from "@heroui/react";
 
-export interface ButtonProps {
-  children: React.ReactNode;
+export interface ButtonProps extends Omit<HeroUIButtonProps, 'variant' | 'size'> {
   variant?: "primary" | "secondary" | "danger" | "outline";
   size?: "small" | "medium" | "large";
   disabled?: boolean;
@@ -19,19 +18,52 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   type = "button",
   className = "",
+  ...props
 }) => {
-  const buttonClass =
-    `button button--${variant} button--${size} ${disabled ? "button--disabled" : ""} ${className}`.trim();
+  // Map our custom variants to hero-ui variants
+  let heroVariant: HeroUIButtonProps['variant'] = 'solid';
+  switch (variant) {
+    case 'outline':
+      heroVariant = 'bordered';
+      break;
+    case 'secondary':
+      heroVariant = 'light';
+      break;
+    case 'danger':
+      heroVariant = 'solid';
+      break;
+    default:
+      heroVariant = 'solid';
+  }
+
+  // Map our custom sizes to hero-ui sizes
+  let heroSize: HeroUIButtonProps['size'] = 'md';
+  switch (size) {
+    case 'small':
+      heroSize = 'sm';
+      break;
+    case 'large':
+      heroSize = 'lg';
+      break;
+    default:
+      heroSize = 'md';
+  }
+
+  const color = variant === 'danger' ? 'danger' : 'primary';
 
   return (
-    <button
-      type={type}
-      className={buttonClass}
-      onClick={onClick}
+    <HeroUIButton
+      variant={heroVariant}
+      size={heroSize}
+      color={color}
       disabled={disabled}
+      onClick={onClick}
+      type={type}
+      className={className}
+      {...props}
     >
       {children}
-    </button>
+    </HeroUIButton>
   );
 };
 

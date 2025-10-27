@@ -3,6 +3,7 @@ import { DietEntry } from '../../lib/types';
 import { logDietEntry, updateDietEntry } from '../../lib/api';
 import { useErrorDispatch } from '../../lib/ErrorContext';
 import { Button } from '../../components/common';
+import { Input, Textarea, Checkbox } from '@heroui/react';
 
 interface HistoryEntryFormProps {
   onEntryAdded?: () => void; // Callback when an entry is added
@@ -17,7 +18,7 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
   const [rating, setRating] = useState<number>(existingEntry?.rating || 0);
   const [notes, setNotes] = useState<string>(existingEntry?.notes || '');
   const [wasPrepared, setWasPrepared] = useState<boolean>(existingEntry?.wasPrepared || true);
-  const [mealType, setMealType] = useState<string>(existingEntry?.mealType || 'lunch');
+  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>(existingEntry?.mealType || 'lunch');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const dispatchError = useErrorDispatch();
@@ -95,38 +96,47 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
 
   return (
     <div className="history-entry-form">
-      <h3>{existingEntry ? '编辑历史记录' : '添加新的历史记录'}</h3>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="dietItemId">饮食项目ID:</label>
-          <input
+      <h3 className="text-xl font-bold mb-4">{existingEntry ? '编辑历史记录' : '添加新的历史记录'}</h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="form-group space-y-2">
+          <label htmlFor="dietItemId" className="block text-sm font-medium text-foreground">
+            饮食项目ID:
+          </label>
+          <Input
             type="text"
             id="dietItemId"
             value={dietItemId}
             onChange={(e) => setDietItemId(e.target.value)}
             placeholder="输入饮食项目ID（例如，来自推荐）"
-            disabled={!!existingEntry} // Don't allow changing ID when editing
+            isDisabled={!!existingEntry} // Don't allow changing ID when editing
+            isRequired
           />
-          {errors.dietItemId && <div className="error-message">{errors.dietItemId}</div>}
+          {errors.dietItemId && <div className="text-danger text-sm">{errors.dietItemId}</div>}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="dateAttempted">尝试日期:</label>
-          <input
+        <div className="form-group space-y-2">
+          <label htmlFor="dateAttempted" className="block text-sm font-medium text-foreground">
+            尝试日期:
+          </label>
+          <Input
             type="date"
             id="dateAttempted"
             value={dateAttempted}
             onChange={(e) => setDateAttempted(e.target.value)}
+            isRequired
           />
-          {errors.dateAttempted && <div className="error-message">{errors.dateAttempted}</div>}
+          {errors.dateAttempted && <div className="text-danger text-sm">{errors.dateAttempted}</div>}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="mealType">餐点类型:</label>
+        <div className="form-group space-y-2">
+          <label htmlFor="mealType" className="block text-sm font-medium text-foreground">
+            餐点类型:
+          </label>
           <select
             id="mealType"
             value={mealType}
-            onChange={(e) => setMealType(e.target.value)}
+            onChange={(e) => setMealType(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:border-gray-600"
           >
             <option value="breakfast">早餐</option>
             <option value="lunch">午餐</option>
@@ -135,52 +145,66 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="rating">评分 (1-5):</label>
-          <div className="rating-input">
+        <div className="form-group space-y-2">
+          <label htmlFor="rating" className="block text-sm font-medium text-foreground">
+            评分 (1-5): {rating || '未评分'}
+          </label>
+          <div className="pt-2">
+          <input
+            type="range"
+            id="rating"
+            value={rating}
+            onChange={(e) => setRating(parseInt(e.target.value))}
+            min="0"
+            max="5"
+            step="1"
+            className="w-full"
+          />
+          </div>
+          <div className="flex gap-1 mt-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
-                className={`star ${star <= rating ? 'filled' : ''}`}
+                className={`text-xl ${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`}
                 onClick={() => setRating(star)}
                 aria-label={`评${star}星`}
               >
                 ★
               </button>
             ))}
-            <span className="rating-value">{rating || '未评分'}</span>
           </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="notes">备注:</label>
-          <textarea
+        <div className="form-group space-y-2">
+          <label htmlFor="notes" className="block text-sm font-medium text-foreground">
+            备注:
+          </label>
+          <Textarea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="添加关于这餐体验的任何备注..."
-            rows={3}
+            minRows={3}
           />
         </div>
 
         <div className="form-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={wasPrepared}
-              onChange={(e) => setWasPrepared(e.target.checked)}
-            />
+          <Checkbox
+            isSelected={wasPrepared}
+            onValueChange={setWasPrepared}
+            className="text-foreground"
+          >
             我准备了这餐
-          </label>
+          </Checkbox>
         </div>
 
-        <div className="form-actions">
-          <Button type="submit" disabled={submitting} variant="primary">
+        <div className="form-actions flex flex-wrap gap-3 pt-4">
+          <Button type="submit" disabled={submitting} variant="primary" color="primary">
             {submitting ? '提交中...' : (existingEntry ? '更新记录' : '添加记录')}
           </Button>
           {existingEntry && onCancel && (
-            <Button type="button" onClick={onCancel} variant="secondary">
+            <Button type="button" onClick={onCancel} variant="outline" color="default">
               取消
             </Button>
           )}

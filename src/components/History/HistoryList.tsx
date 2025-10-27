@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getDietHistory, getDietHistoryCount } from "../../lib/api";
 import { DietEntry, GetHistoryParams } from "../../lib/types";
 import HistoryEntryForm from "./HistoryEntryForm";
+import { Input, Button as HeroUIButton } from "@heroui/react";
 
 const HistoryList: React.FC = () => {
   const [history, setHistory] = useState<DietEntry[]>([]);
@@ -10,7 +11,11 @@ const HistoryList: React.FC = () => {
   const [showForm, setShowForm] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    startDate: string;
+    endDate: string;
+    mealType: "breakfast" | "lunch" | "dinner" | "snack" | "";
+  }>({
     startDate: "",
     endDate: "",
     mealType: "",
@@ -204,20 +209,23 @@ const HistoryList: React.FC = () => {
       <div className="error-container">
         <div className="error">错误: {error}</div>
         <div className="error-actions">
-          <button onClick={handleRetry} className="btn-secondary">
+          <HeroUIButton onClick={handleRetry} variant="bordered" color="default">
             重试
-          </button>
+          </HeroUIButton>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="history-list">
+    <div className="history-list space-y-6">
       <div className="history-header">
-        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+        <HeroUIButton 
+          onClick={() => setShowForm(!showForm)}
+          color="primary"
+        >
           {showForm ? "取消" : "添加新记录"}
-        </button>
+        </HeroUIButton>
       </div>
 
       {showForm && (
@@ -227,34 +235,43 @@ const HistoryList: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="filters">
-        <div className="filter-group">
-          <label htmlFor="startDate">开始日期:</label>
-          <input
+      <div className="filters flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+        <div className="filter-group space-y-2 flex-1">
+          <label htmlFor="startDate" className="block text-sm font-medium text-foreground">
+            开始日期:
+          </label>
+          <Input
             type="date"
             id="startDate"
             name="startDate"
             value={filters.startDate}
-            onChange={handleFilterChange}
+            onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+            isClearable
           />
         </div>
-        <div className="filter-group">
-          <label htmlFor="endDate">结束日期:</label>
-          <input
+        <div className="filter-group space-y-2 flex-1">
+          <label htmlFor="endDate" className="block text-sm font-medium text-foreground">
+            结束日期:
+          </label>
+          <Input
             type="date"
             id="endDate"
             name="endDate"
             value={filters.endDate}
-            onChange={handleFilterChange}
+            onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+            isClearable
           />
         </div>
-        <div className="filter-group">
-          <label htmlFor="mealType">餐点类型:</label>
+        <div className="filter-group space-y-2 flex-1">
+          <label htmlFor="mealType" className="block text-sm font-medium text-foreground">
+            餐点类型:
+          </label>
           <select
             id="mealType"
             name="mealType"
             value={filters.mealType}
-            onChange={handleFilterChange}
+            onChange={(e) => setFilters(prev => ({ ...prev, mealType: e.target.value as any }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:border-gray-600"
           >
             <option value="">所有类型</option>
             <option value="breakfast">早餐</option>
@@ -266,13 +283,15 @@ const HistoryList: React.FC = () => {
       </div>
 
       {history.length === 0 ? (
-        <div className="no-history">未找到饮食历史记录。</div>
+        <div className="no-history py-8 text-center text-gray-500 dark:text-gray-400">
+          未找到饮食历史记录。
+        </div>
       ) : (
         <>
           <div className="history-grid">
             {history.map((entry) => (
-              <div key={entry.id} className="history-entry">
-                <h3>
+              <div key={entry.id} className="history-entry border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-semibold">
                   {entry.mealType === "breakfast"
                     ? "早餐"
                     : entry.mealType === "lunch"
@@ -282,7 +301,7 @@ const HistoryList: React.FC = () => {
                         : "零食"}{" "}
                   - {entry.dateAttempted}
                 </h3>
-                <div className="entry-details">
+                <div className="entry-details mt-2 space-y-2">
                   <div className="rating">
                     评分: {entry.rating ? "★".repeat(entry.rating) : "未评分"}
                   </div>
@@ -302,24 +321,28 @@ const HistoryList: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <div className="pagination">
-            <button
+          <div className="pagination flex items-center justify-between pt-4">
+            <HeroUIButton
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
+              variant="bordered"
+              color="default"
             >
               上一页
-            </button>
-            <span>
+            </HeroUIButton>
+            <span className="text-foreground">
               第 {currentPage} 页，共 {totalPages} 页
             </span>
-            <button
+            <HeroUIButton
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
+              variant="bordered"
+              color="default"
             >
               下一页
-            </button>
+            </HeroUIButton>
           </div>
         </>
       )}
