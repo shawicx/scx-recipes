@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button, Spinner, Card, CardBody } from '@heroui/react';
 import RecommendationCard from './RecommendationCard';
 import { getRecommendations } from '../../lib/api';
 import { RecommendationItem } from '../../lib/types';
@@ -55,7 +56,14 @@ const RecommendationList: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="loading">正在加载推荐...</div>;
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner size="lg" />
+          <p className="text-default-500">正在加载推荐...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleRetry = () => {
@@ -65,39 +73,54 @@ const RecommendationList: React.FC = () => {
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="error">错误: {error}</div>
-        <div className="error-actions">
-          <button onClick={handleRetry} className="btn-secondary">
-            重试
-          </button>
-          {error.includes('健康档案') && (
-            <button 
-              onClick={() => window.location.href = '#profile'}
-              className="btn-primary"
-            >
-              前往健康档案设置
-            </button>
-          )}
-        </div>
-      </div>
+      <Card className="w-full">
+        <CardBody className="text-center p-8">
+          <div className="flex flex-col items-center gap-4">
+            <span className="text-4xl">⚠️</span>
+            <p className="text-danger text-lg font-medium">错误: {error}</p>
+            <div className="flex gap-3 flex-wrap justify-center">
+              <Button 
+                onClick={handleRetry} 
+                variant="bordered"
+                color="default"
+              >
+                重试
+              </Button>
+              {error.includes('健康档案') && (
+                <Button 
+                  onClick={() => window.dispatchEvent(new CustomEvent('navigateToTab', { detail: 'profile' }))}
+                  color="primary"
+                >
+                  前往健康档案设置
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardBody>
+      </Card>
     );
   }
 
   return (
     <div className="recommendation-list">
       {recommendations.length === 0 ? (
-        <div className="no-recommendations">
-          <p>暂无推荐。请完善您的健康档案。</p>
-          <button 
-            onClick={() => window.location.href = '#profile'}
-            className="btn-primary"
-          >
-            前往健康档案设置
-          </button>
-        </div>
+        <Card className="w-full">
+          <CardBody className="text-center p-8">
+            <div className="flex flex-col items-center gap-4">
+              <span className="text-6xl">🍽️</span>
+              <p className="text-default-600 text-lg">暂无推荐。请完善您的健康档案。</p>
+              <Button 
+                onClick={() => window.dispatchEvent(new CustomEvent('navigateToTab', { detail: 'profile' }))}
+                color="primary"
+                size="lg"
+              >
+                前往健康档案设置
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
       ) : (
-        <div className="recommendation-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recommendations.map((recommendation) => (
             <RecommendationCard key={recommendation.id} recommendation={recommendation} />
           ))}

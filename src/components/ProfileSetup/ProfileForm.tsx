@@ -7,7 +7,17 @@ import {
 import { HealthProfile } from "../../lib/types";
 import { useErrorDispatch } from "../../lib/ErrorContext";
 import { Button } from "../../components/common";
-import { Input, Textarea, Checkbox } from "@heroui/react";
+import {
+  Input,
+  Textarea,
+  Checkbox,
+  Select,
+  SelectItem,
+  Card,
+  CardHeader,
+  CardBody,
+  Divider,
+} from "@heroui/react";
 
 const ProfileForm: React.FC = () => {
   const [profile, setProfile] = useState<HealthProfile>({
@@ -314,12 +324,17 @@ const ProfileForm: React.FC = () => {
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="form-section space-y-6">
-          <h3 className="form-section-title text-xl font-semibold text-foreground">基本信息</h3>
+          <h3 className="form-section-title text-xl font-semibold text-foreground">
+            基本信息
+          </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="form-group space-y-2">
-              <label htmlFor="userId" className="required block text-sm font-medium text-foreground">
-                用户ID *
+              <label
+                htmlFor="userId"
+                className="required block text-sm font-medium text-foreground"
+              >
+                用户ID
               </label>
               <Input
                 type="text"
@@ -331,12 +346,14 @@ const ProfileForm: React.FC = () => {
                 isRequired
                 isDisabled={isLoading}
               />
-              <p className="form-help text-xs text-foreground-500">用于标识您的个人档案</p>
             </div>
 
             <div className="form-group space-y-2">
-              <label htmlFor="age" className="required block text-sm font-medium text-foreground">
-                年龄 *
+              <label
+                htmlFor="age"
+                className="required block text-sm font-medium text-foreground"
+              >
+                年龄
               </label>
               <Input
                 type="number"
@@ -355,50 +372,63 @@ const ProfileForm: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="form-group space-y-2">
-              <label htmlFor="gender" className="required block text-sm font-medium text-foreground">
-                性别 *
-              </label>
-              <select
-                id="gender"
-                name="gender"
-                value={profile.gender}
-                onChange={(e) => setProfile(prev => ({ ...prev, gender: e.target.value as any }))}
-                required
-                disabled={isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:border-gray-600"
+              <Select
+                label="性别"
+                placeholder="选择性别"
+                selectedKeys={[profile.gender]}
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+                  setProfile((prev) => ({
+                    ...prev,
+                    gender: selectedKey as any,
+                  }));
+                }}
+                isRequired
+                isDisabled={isLoading}
               >
-                <option value="male">男性</option>
-                <option value="female">女性</option>
-                <option value="other">其他</option>
-                <option value="prefer_not_to_say">不愿透露</option>
-              </select>
+                <SelectItem key="male">男性</SelectItem>
+                <SelectItem key="female">女性</SelectItem>
+                <SelectItem key="other">其他</SelectItem>
+                <SelectItem key="prefer_not_to_say">不愿透露</SelectItem>
+              </Select>
             </div>
 
             <div className="form-group space-y-2">
-              <label htmlFor="activityLevel" className="block text-sm font-medium text-foreground">
-                活动水平
-              </label>
-              <select
-                id="activityLevel"
-                name="activityLevel"
-                value={profile.activityLevel}
-                onChange={(e) => setProfile(prev => ({ ...prev, activityLevel: e.target.value as any }))}
-                disabled={isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:border-gray-600"
+              <Select
+                label="活动水平"
+                placeholder="选择活动水平"
+                selectedKeys={[profile.activityLevel]}
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+                  setProfile((prev) => ({
+                    ...prev,
+                    activityLevel: selectedKey as any,
+                  }));
+                }}
+                isDisabled={isLoading}
+                description="选择最符合您日常运动情况的选项"
               >
-                <option value="sedentary">久坐 (很少或不运动)</option>
-                <option value="light">轻度 (每周运动1-3天)</option>
-                <option value="moderate">中度 (每周运动3-5天)</option>
-                <option value="active">活跃 (每周运动6-7天)</option>
-                <option value="very_active">非常活跃 (每天剧烈运动)</option>
-              </select>
-              <p className="form-help text-xs text-foreground-500">选择最符合您日常运动情况的选项</p>
+                <SelectItem key="sedentary" value="sedentary">
+                  久坐 (很少或不运动)
+                </SelectItem>
+                <SelectItem key="light" value="light">
+                  轻度 (每周运动1-3天)
+                </SelectItem>
+                <SelectItem key="moderate">中度 (每周运动3-5天)</SelectItem>
+                <SelectItem key="active">活跃 (每周运动6-7天)</SelectItem>
+                <SelectItem key="very_active">
+                  非常活跃 (每天剧烈运动)
+                </SelectItem>
+              </Select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="form-group space-y-2">
-              <label htmlFor="weight" className="required block text-sm font-medium text-foreground">
+              <label
+                htmlFor="weight"
+                className="required block text-sm font-medium text-foreground"
+              >
                 体重 (公斤) *
               </label>
               <Input
@@ -416,7 +446,10 @@ const ProfileForm: React.FC = () => {
             </div>
 
             <div className="form-group space-y-2">
-              <label htmlFor="height" className="required block text-sm font-medium text-foreground">
+              <label
+                htmlFor="height"
+                className="required block text-sm font-medium text-foreground"
+              >
                 身高 (厘米) *
               </label>
               <Input
@@ -435,10 +468,15 @@ const ProfileForm: React.FC = () => {
         </div>
 
         <div className="form-section space-y-6">
-          <h3 className="form-section-title text-xl font-semibold text-foreground">健康目标与偏好</h3>
+          <h3 className="form-section-title text-xl font-semibold text-foreground">
+            健康目标与偏好
+          </h3>
 
           <div className="form-group space-y-2">
-            <label htmlFor="healthGoals" className="block text-sm font-medium text-foreground">
+            <label
+              htmlFor="healthGoals"
+              className="block text-sm font-medium text-foreground"
+            >
               健康目标
             </label>
             <Input
@@ -449,13 +487,13 @@ const ProfileForm: React.FC = () => {
               placeholder="例如: 减重, 增肌, 维持"
               isDisabled={isLoading}
             />
-            <p className="form-help text-xs text-foreground-500">
-              用逗号分隔多个目标，如：减重, 增肌, 控糖
-            </p>
           </div>
 
           <div className="form-group space-y-2">
-            <label htmlFor="dietaryPreferences" className="block text-sm font-medium text-foreground">
+            <label
+              htmlFor="dietaryPreferences"
+              className="block text-sm font-medium text-foreground"
+            >
               饮食偏好
             </label>
             <Input
@@ -466,13 +504,13 @@ const ProfileForm: React.FC = () => {
               placeholder="例如: 素食, 低碳水, 生酮"
               isDisabled={isLoading}
             />
-            <p className="form-help text-xs text-foreground-500">
-              用逗号分隔多个偏好，如：素食, 低碳水, 地中海饮食
-            </p>
           </div>
 
           <div className="form-group space-y-2">
-            <label htmlFor="dietaryRestrictions" className="block text-sm font-medium text-foreground">
+            <label
+              htmlFor="dietaryRestrictions"
+              className="block text-sm font-medium text-foreground"
+            >
               饮食限制
             </label>
             <Input
@@ -483,13 +521,13 @@ const ProfileForm: React.FC = () => {
               placeholder="例如: 无麸质, 无乳制品, 无坚果"
               isDisabled={isLoading}
             />
-            <p className="form-help text-xs text-foreground-500">
-              用逗号分隔多个限制，如：无麸质, 无乳制品, 清真
-            </p>
           </div>
 
           <div className="form-group space-y-2">
-            <label htmlFor="allergies" className="block text-sm font-medium text-foreground">
+            <label
+              htmlFor="allergies"
+              className="block text-sm font-medium text-foreground"
+            >
               过敏源
             </label>
             <Input
@@ -500,9 +538,6 @@ const ProfileForm: React.FC = () => {
               placeholder="例如: 坚果, 贝类, 大豆"
               isDisabled={isLoading}
             />
-            <p className="form-help text-xs text-foreground-500">
-              用逗号分隔多个过敏源，如：花生, 海鲜, 鸡蛋
-            </p>
           </div>
         </div>
 
@@ -539,9 +574,9 @@ const ProfileForm: React.FC = () => {
         )}
 
         <div className="form-actions flex flex-wrap gap-3 pt-4">
-          <Button 
-            type="submit" 
-            disabled={isLoading} 
+          <Button
+            type="submit"
+            disabled={isLoading}
             color="primary"
             className="min-w-[140px]"
           >
@@ -575,7 +610,7 @@ const ProfileForm: React.FC = () => {
               });
             }}
             variant="outline"
-            color="default"
+            color="primary"
           >
             调试信息
           </Button>
