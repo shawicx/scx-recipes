@@ -1,7 +1,11 @@
 import React from "react";
-import { Button as HeroUIButton, type ButtonProps as HeroUIButtonProps } from "@heroui/react";
+import {
+  Button as HeroUIButton,
+  type ButtonProps as HeroUIButtonProps,
+} from "@heroui/react";
 
-export interface ButtonProps extends Omit<HeroUIButtonProps, 'variant' | 'size'> {
+export interface ButtonProps
+  extends Omit<HeroUIButtonProps, "variant" | "size"> {
   variant?: "primary" | "secondary" | "danger" | "outline";
   size?: "small" | "medium" | "large";
   disabled?: boolean;
@@ -21,35 +25,35 @@ const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   // Map our custom variants to hero-ui variants
-  let heroVariant: HeroUIButtonProps['variant'] = 'solid';
+  let heroVariant: HeroUIButtonProps["variant"] = "solid";
   switch (variant) {
-    case 'outline':
-      heroVariant = 'bordered';
+    case "outline":
+      heroVariant = "bordered";
       break;
-    case 'secondary':
-      heroVariant = 'light';
+    case "secondary":
+      heroVariant = "light";
       break;
-    case 'danger':
-      heroVariant = 'solid';
+    case "danger":
+      heroVariant = "solid";
       break;
     default:
-      heroVariant = 'solid';
+      heroVariant = "solid";
   }
 
   // Map our custom sizes to hero-ui sizes
-  let heroSize: HeroUIButtonProps['size'] = 'md';
+  let heroSize: HeroUIButtonProps["size"] = "md";
   switch (size) {
-    case 'small':
-      heroSize = 'sm';
+    case "small":
+      heroSize = "sm";
       break;
-    case 'large':
-      heroSize = 'lg';
+    case "large":
+      heroSize = "lg";
       break;
     default:
-      heroSize = 'md';
+      heroSize = "md";
   }
 
-  const color = variant === 'danger' ? 'danger' : 'primary';
+  const color = variant === "danger" ? "danger" : "primary";
 
   return (
     <HeroUIButton

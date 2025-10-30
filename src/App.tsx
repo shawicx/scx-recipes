@@ -1,6 +1,5 @@
 import React from "react";
 import { ErrorProvider } from "./lib/ErrorContext";
-import { ThemeProvider } from "./lib/ThemeContext";
 import { ThemeToggle } from "./components/common";
 import Navigation from "./components/common/Navigation";
 import Dashboard from "./components/common/Dashboard";
@@ -8,7 +7,12 @@ import ProfileSetup from "./components/ProfileSetup";
 import Recommendations from "./components/Recommendations";
 import History from "./components/History";
 import { useNavigation, type TabType } from "./hooks/useNavigation";
-import { Card, CardHeader, CardBody } from "@heroui/react";
+import { 
+  Card, 
+  CardHeader, 
+  CardBody
+} from "@heroui/react";
+import { AppThemeProvider } from "./components/common/AppThemeProvider";
 import "./styles/globals.css";
 
 function App() {
@@ -45,17 +49,17 @@ function App() {
   };
 
   return (
-    <ThemeProvider>
+    <AppThemeProvider>
       <ErrorProvider>
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-screen flex-col md:flex-row">
           <Navigation 
             activeTab={activeTab} 
             onTabChange={(tab: TabType) => setActiveTab(tab)} 
           />
           
           {/* Main content area - adjusted for sidebar */}
-          <main className="md:ml-72 flex-1 pb-20 md:pb-0">
-            <Card className="border-0 shadow-none rounded-none md:rounded-lg m-4 md:m-6">
+          <main className="w-full md:ml-64 flex-1 pb-24 md:pb-6 pt-16 md:pt-0 bg-background-50">
+            <Card className="border-0 shadow-none rounded-none md:rounded-xl m-4 md:m-6 h-auto min-h-[calc(100vh-5rem)] md:min-h-[calc(100vh-3rem)]">
               <CardHeader className="border-b border-divider p-4 md:p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 w-full">
                   <div className="flex-1">
@@ -72,17 +76,17 @@ function App() {
                           首页
                         </a>
                         <span>/</span>
-                        <span>
+                        <span className="text-foreground-600">
                           {activeTab === "dashboard" ? "健康概览" : 
                            activeTab === "profile" ? "健康档案" : 
                            activeTab === "recommendations" ? "饮食推荐" : "饮食记录"}
                         </span>
                       </nav>
                     </div>
-                    <h1 className="text-2xl font-bold text-foreground">
+                    <h1 className="text-xl md:text-2xl font-bold text-foreground">
                       {getPageInfo().title}
                     </h1>
-                    <p className="text-foreground/70 mt-1">
+                    <p className="text-foreground-600 mt-1 text-sm md:text-base">
                       {getPageInfo().subtitle}
                     </p>
                   </div>
@@ -93,7 +97,7 @@ function App() {
                 </div>
               </CardHeader>
               
-              <CardBody className="p-4 md:p-6">
+              <CardBody className="p-4 md:p-6 overflow-y-auto">
                 <div className="max-w-7xl mx-auto">
                   {renderActiveTab()}
                 </div>
@@ -102,7 +106,7 @@ function App() {
           </main>
         </div>
       </ErrorProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   );
 }
 

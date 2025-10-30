@@ -10,12 +10,7 @@ import {
   Pagination,
   Chip,
   Divider,
-  Spinner,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  useDisclosure,
+  Skeleton
 } from "@heroui/react";
 import { getDietHistory, getDietHistoryCount } from "../../lib/api";
 import { DietEntry, GetHistoryParams } from "../../lib/types";
@@ -38,6 +33,7 @@ const HistoryList: React.FC = () => {
     mealType: "",
   });
   const [limit] = useState<number>(5); // Number of entries per page
+
 
   // Fetch history with pagination and filtering
   useEffect(() => {
@@ -111,10 +107,19 @@ const HistoryList: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFilters((prev) => {
+      // 确保mealType值是有效的枚举值
+      if(name === 'mealType') {
+        return {
+          ...prev,
+          [name]: value as "breakfast" | "lunch" | "dinner" | "snack" | ""
+        };
+      }
+      return {
+        ...prev,
+        [name]: value
+      };
+    });
     setCurrentPage(1); // Reset to first page when filters change
   };
 
@@ -154,7 +159,26 @@ const HistoryList: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="loading">正在加载饮食历史...</div>;
+    return (
+      <div className="space-y-4">
+        {[...Array(3)].map((_, index) => (
+          <Card key={index} className="w-full">
+            <CardHeader>
+              <div className="flex gap-3">
+                <Skeleton className="w-12 h-6 rounded" />
+                <Skeleton className="w-3/4 h-6 rounded" />
+              </div>
+            </CardHeader>
+            <CardBody>
+              <div className="space-y-3">
+                <Skeleton className="w-1/4 h-4 rounded" />
+                <Skeleton className="w-full h-12 rounded" />
+              </div>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
   const handleRetry = () => {
@@ -223,33 +247,48 @@ const HistoryList: React.FC = () => {
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="error">错误: {error}</div>
-        <div className="error-actions">
-          <HeroUIButton
-            onClick={handleRetry}
-            variant="bordered"
-            color="default"
-          >
-            重试
-          </HeroUIButton>
-        </div>
-      </div>
+      <Card className="border-2 border-danger">
+        <CardBody className="p-4">
+          <div className="flex flex-col items-center justify-center gap-3">
+            <span className="text-3xl text-danger">⚠️</span>
+            <h3 className="text-lg font-semibold text-danger">加载失败</h3>
+            <p className="text-center text-foreground-600">{error}</p>
+            <Button
+              onClick={handleRetry}
+              color="danger"
+              variant="solid"
+              className="mt-2"
+            >
+              重试
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
     );
   }
 
   return (
-    <div className="history-list space-y-6">
-      <div className="history-header">
-        <Button onClick={() => setShowForm(!showForm)} color="primary">
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-3">
+        <Button 
+          onClick={() => setShowForm(!showForm)} 
+          color="primary"
+          startContent={<span>📝</span>}
+        >
           {showForm ? "取消" : "添加新记录"}
         </Button>
       </div>
 
       {showForm && (
-        <div className="form-container">
-          <HistoryEntryForm onEntryAdded={handleFormSubmit} />
-        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <h3 className="text-lg font-semibold">添加饮食记录</h3>
+          </CardHeader>
+          <Divider />
+          <CardBody>
+            <HistoryEntryForm onEntryAdded={handleFormSubmit} />
+          </CardBody>
+        </Card>
       )}
 
       {/* Filters */}
@@ -257,25 +296,28 @@ const HistoryList: React.FC = () => {
         <CardHeader>
           <h3 className="text-lg font-semibold">筛选条件</h3>
         </CardHeader>
+        <Divider />
         <CardBody>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input
-              type="date"
               label="开始日期"
+              type="date"
               value={filters.startDate}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, startDate: e.target.value }))
               }
               isClearable
+              variant="bordered"
             />
             <Input
-              type="date"
               label="结束日期"
+              type="date"
               value={filters.endDate}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, endDate: e.target.value }))
               }
               isClearable
+              variant="bordered"
             />
             <Select
               label="餐点类型"
@@ -285,25 +327,16 @@ const HistoryList: React.FC = () => {
                 const selectedKey = Array.from(keys)[0] as string;
                 setFilters((prev) => ({
                   ...prev,
-                  mealType: selectedKey || "",
+                  mealType: selectedKey as "breakfast" | "lunch" | "dinner" | "snack" | "",
                 }));
               }}
+              variant="bordered"
             >
-              <SelectItem key="" value="">
-                所有类型
-              </SelectItem>
-              <SelectItem key="breakfast" value="breakfast">
-                早餐
-              </SelectItem>
-              <SelectItem key="lunch" value="lunch">
-                午餐
-              </SelectItem>
-              <SelectItem key="dinner" value="dinner">
-                晚餐
-              </SelectItem>
-              <SelectItem key="snack" value="snack">
-                零食
-              </SelectItem>
+              <SelectItem key="">所有类型</SelectItem>
+              <SelectItem key="breakfast">早餐</SelectItem>
+              <SelectItem key="lunch">午餐</SelectItem>
+              <SelectItem key="dinner">晚餐</SelectItem>
+              <SelectItem key="snack">零食</SelectItem>
             </Select>
           </div>
         </CardBody>
@@ -311,80 +344,88 @@ const HistoryList: React.FC = () => {
 
       {history.length === 0 ? (
         <Card className="w-full">
-          <CardBody className="text-center p-8">
+          <CardBody className="text-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <span className="text-6xl">📋</span>
-              <p className="text-default-600 text-lg">未找到饮食历史记录。</p>
+              <span className="text-5xl">📋</span>
+              <h3 className="text-xl font-semibold">暂无饮食历史记录</h3>
+              <p className="text-foreground-500">您可以添加新的饮食记录，或完善健康档案以获得更多推荐</p>
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  onClick={() => setShowForm(true)} 
+                  color="primary"
+                  startContent={<span> ➕</span>}
+                >
+                  添加记录
+                </Button>
+              </div>
             </div>
           </CardBody>
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-4">
             {history.map((entry) => (
               <Card key={entry.id} className="w-full">
-                <CardHeader className="flex gap-3">
-                  <div className="flex items-center gap-2">
-                    <Chip
-                      color={
-                        entry.mealType === "breakfast"
-                          ? "primary"
+                <CardHeader className="flex justify-between items-start">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Chip
+                        color={
+                          entry.mealType === "breakfast"
+                            ? "primary"
+                            : entry.mealType === "lunch"
+                              ? "secondary"
+                              : entry.mealType === "dinner"
+                                ? "success"
+                                : "default"
+                        }
+                        variant="flat"
+                      >
+                        {entry.mealType === "breakfast"
+                          ? "早餐"
                           : entry.mealType === "lunch"
-                            ? "secondary"
+                            ? "午餐"
                             : entry.mealType === "dinner"
-                              ? "success"
-                              : "default"
-                      }
-                      variant="flat"
-                    >
-                      {entry.mealType === "breakfast"
-                        ? "早餐"
-                        : entry.mealType === "lunch"
-                          ? "午餐"
-                          : entry.mealType === "dinner"
-                            ? "晚餐"
-                            : "零食"}
-                    </Chip>
-                    <span className="text-default-500">
-                      {entry.dateAttempted}
-                    </span>
+                              ? "晚餐"
+                              : "零食"}
+                      </Chip>
+                      <span className="text-sm text-foreground-500">
+                        {entry.dateAttempted}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {entry.rating && typeof entry.rating !== 'undefined' ? (
+                      <div className="flex">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <span
+                            key={i}
+                            className={`text-lg ${
+                              i < entry.rating!
+                                ? "text-warning"
+                                : "text-default-300"
+                            }`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-foreground-500">未评分</span>
+                    )}
                   </div>
                 </CardHeader>
+                <Divider />
                 <CardBody>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">评分:</span>
-                      <div className="flex items-center gap-1">
-                        {entry.rating ? (
-                          <div className="flex">
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <span
-                                key={i}
-                                className={`text-lg ${
-                                  i < entry.rating
-                                    ? "text-warning"
-                                    : "text-default-300"
-                                }`}
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-default-500">未评分</span>
-                        )}
-                      </div>
-                    </div>
-
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {entry.notes && (
                       <div>
-                        <span className="text-sm font-medium">备注:</span>
-                        <p className="text-default-600 mt-1">{entry.notes}</p>
+                        <p className="text-sm font-medium text-foreground-600 mb-1">备注</p>
+                        <p className="text-foreground-700">{entry.notes}</p>
                       </div>
                     )}
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">准备状态:</span>
+                    <div>
+                      <p className="text-sm font-medium text-foreground-600 mb-1">准备状态</p>
                       <Chip
                         color={entry.wasPrepared ? "success" : "default"}
                         variant="flat"
@@ -400,28 +441,15 @@ const HistoryList: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <div className="pagination flex items-center justify-between pt-4">
-            <Button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              variant="bordered"
-              color="default"
-            >
-              上一页
-            </Button>
-            <span className="text-foreground">
-              第 {currentPage} 页，共 {totalPages} 页
-            </span>
-            <Button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              variant="bordered"
-              color="default"
-            >
-              下一页
-            </Button>
+          <div className="flex items-center justify-center py-6">
+            <Pagination
+              total={totalPages}
+              page={currentPage}
+              onChange={setCurrentPage}
+              color="primary"
+              showControls
+              size="lg"
+            />
           </div>
         </>
       )}

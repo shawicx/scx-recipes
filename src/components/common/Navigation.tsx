@@ -1,4 +1,9 @@
 import React, { useState } from "react";
+import { 
+  Button,
+  Drawer,
+  DrawerContent
+} from "@heroui/react";
 import type { TabType } from "../../hooks/useNavigation";
 
 interface NavigationProps {
@@ -29,17 +34,19 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
         <ul className="nav-menu flex-1 p-4">
           {navItems.map((item) => (
             <li key={item.id} className="mb-1">
-              <button
-                className={`nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+              <Button
+                className={`nav-item w-full justify-start ${
                   activeTab === item.id 
                     ? "bg-primary/10 text-primary font-medium" 
-                    : "hover:bg-foreground/5"
+                    : ""
                 }`}
-                onClick={() => onTabChange(item.id)}
+                variant={activeTab === item.id ? "flat" : "light"}
+                color={activeTab === item.id ? "primary" : "default"}
+                onPress={() => onTabChange(item.id)}
+                startContent={<span className="text-lg">{item.icon}</span>}
               >
-                <span className="nav-item-icon text-lg">{item.icon}</span>
-                <span className="nav-item-label">{item.label}</span>
-              </button>
+                {item.label}
+              </Button>
             </li>
           ))}
         </ul>
@@ -48,61 +55,52 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
         </div>
       </nav>
 
-      {/* 移动端顶部导航 */}
-      <header className="md:hidden fixed w-full top-0 z-50 bg-background border-b border-divider">
-        <div className="p-4 flex items-center justify-between">
-          <h1 className="mobile-title text-lg font-bold flex items-center gap-2">
-            <span className="mobile-icon text-xl">🥗</span>
-            智能饮食助手
-          </h1>
-          <button
-            className="mobile-menu-toggle p-2 rounded-lg border border-divider"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? "✕" : "☰"}
-          </button>
+      {/* 移动端底部抽屉导航 */}
+      <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
+        <div className="flex justify-around items-center p-2 bg-background border border-divider rounded-xl shadow-lg">
+          {navItems.map((item) => (
+            <Button
+              key={item.id}
+              className={`flex-col h-16 min-w-0 px-2 ${
+                activeTab === item.id ? "text-primary" : "text-foreground-500"
+              }`}
+              variant="light"
+              color={activeTab === item.id ? "primary" : "default"}
+              onPress={() => onTabChange(item.id)}
+            >
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-xs">{item.label}</span>
+            </Button>
+          ))}
         </div>
-
-        {isMobileMenuOpen && (
-          <div className="mobile-menu bg-background border-b border-divider">
+      </div>
+      
+      {/* 移动端顶部菜单抽屉 */}
+      <Drawer isOpen={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen} placement="top">
+        <DrawerContent className="p-4">
+          <div className="grid grid-cols-2 gap-4">
             {navItems.map((item) => (
-              <button
+              <Button
                 key={item.id}
-                className={`mobile-nav-item w-full text-left p-4 flex items-center gap-3 ${
+                className={`justify-start h-14 ${
                   activeTab === item.id 
                     ? "bg-primary/10 text-primary font-medium" 
                     : ""
                 }`}
-                onClick={() => {
+                variant={activeTab === item.id ? "flat" : "light"}
+                color={activeTab === item.id ? "primary" : "default"}
+                onPress={() => {
                   onTabChange(item.id);
                   setIsMobileMenuOpen(false);
                 }}
+                startContent={<span className="text-lg">{item.icon}</span>}
               >
-                <span className="mobile-nav-icon text-lg">{item.icon}</span>
-                <span className="mobile-nav-label">{item.label}</span>
-              </button>
+                {item.label}
+              </Button>
             ))}
           </div>
-        )}
-      </header>
-
-      {/* 移动端底部标签栏 */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-divider z-50">
-        <div className="flex justify-around items-center">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              className={`bottom-nav-item flex flex-col items-center justify-center h-16 min-w-0 px-2 py-1 ${
-                activeTab === item.id ? "text-primary" : "text-foreground-500"
-              }`}
-              onClick={() => onTabChange(item.id)}
-            >
-              <span className="bottom-nav-icon text-lg">{item.icon}</span>
-              <span className="bottom-nav-label text-xs">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 };

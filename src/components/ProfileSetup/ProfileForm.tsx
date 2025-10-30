@@ -6,17 +6,15 @@ import {
 } from "../../lib/api";
 import { HealthProfile } from "../../lib/types";
 import { useErrorDispatch } from "../../lib/ErrorContext";
-import { Button } from "../../components/common";
-import {
-  Input,
-  Textarea,
-  Checkbox,
-  Select,
-  SelectItem,
+import { 
+  Input, 
+  Select, 
+  SelectItem, 
+  Button, 
   Card,
   CardHeader,
   CardBody,
-  Divider,
+  Divider
 } from "@heroui/react";
 
 const ProfileForm: React.FC = () => {
@@ -81,7 +79,7 @@ const ProfileForm: React.FC = () => {
 
   const handleInputChange = (
     e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      HTMLInputElement | HTMLSelectElement
     >,
   ) => {
     const { name, value } = e.target;
@@ -321,302 +319,292 @@ const ProfileForm: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="form-section space-y-6">
-          <h3 className="form-section-title text-xl font-semibold text-foreground">
-            基本信息
-          </h3>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <h2 className="text-2xl font-bold">👤 健康档案设置</h2>
+        <p className="text-foreground-600">请填写您的健康信息以便为您推荐合适的食物</p>
+      </CardHeader>
+      
+      <Divider />
+      
+      <CardBody>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* 基本信息卡片 */}
+          <Card className="p-6">
+            <CardHeader className="pb-3">
+              <h3 className="text-xl font-semibold">基本信息</h3>
+            </CardHeader>
+            <Divider />
+            <CardBody className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Input
+                    label="用户ID"
+                    variant="bordered"
+                    type="text"
+                    id="userId"
+                    name="userId"
+                    value={profile.userId}
+                    onChange={handleInputChange}
+                    placeholder="输入用户ID"
+                    isRequired
+                    isDisabled={isLoading}
+                    description="用于识别您的账户"
+                  />
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="form-group space-y-2">
-              <label
-                htmlFor="userId"
-                className="required block text-sm font-medium text-foreground"
-              >
-                用户ID
-              </label>
-              <Input
-                type="text"
-                id="userId"
-                name="userId"
-                value={profile.userId}
-                onChange={handleInputChange}
-                placeholder="输入用户ID"
-                isRequired
-                isDisabled={isLoading}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Input
+                    label="年龄"
+                    variant="bordered"
+                    type="number"
+                    id="age"
+                    name="age"
+                    value={profile.age ? profile.age.toString() : ""}
+                    onChange={handleInputChange}
+                    min="18"
+                    max="120"
+                    isRequired
+                    isDisabled={isLoading}
+                    description="18-120岁之间"
+                  />
+                </div>
 
-            <div className="form-group space-y-2">
-              <label
-                htmlFor="age"
-                className="required block text-sm font-medium text-foreground"
-              >
-                年龄
-              </label>
-              <Input
-                type="number"
-                id="age"
-                name="age"
-                value={profile.age ? profile.age.toString() : ""}
-                onChange={handleInputChange}
-                min="18"
-                max="120"
-                isRequired
-                isDisabled={isLoading}
-                description="18-120岁之间"
-              />
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Select
+                    label="性别"
+                    placeholder="选择性别"
+                    selectedKeys={[profile.gender]}
+                    onSelectionChange={(keys) => {
+                      const selectedKey = Array.from(keys)[0] as string;
+                      setProfile((prev) => ({
+                        ...prev,
+                        gender: selectedKey as any,
+                      }));
+                    }}
+                    isRequired
+                    isDisabled={isLoading}
+                    className="w-full"
+                  >
+                    <SelectItem key="male">男性</SelectItem>
+                    <SelectItem key="female">女性</SelectItem>
+                    <SelectItem key="other">其他</SelectItem>
+                    <SelectItem key="prefer_not_to_say">不愿透露</SelectItem>
+                  </Select>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="form-group space-y-2">
-              <Select
-                label="性别"
-                placeholder="选择性别"
-                selectedKeys={[profile.gender]}
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-                  setProfile((prev) => ({
-                    ...prev,
-                    gender: selectedKey as any,
-                  }));
-                }}
-                isRequired
-                isDisabled={isLoading}
-              >
-                <SelectItem key="male">男性</SelectItem>
-                <SelectItem key="female">女性</SelectItem>
-                <SelectItem key="other">其他</SelectItem>
-                <SelectItem key="prefer_not_to_say">不愿透露</SelectItem>
-              </Select>
-            </div>
+                <div className="space-y-2">
+                  <Select
+                    label="活动水平"
+                    placeholder="选择活动水平"
+                    selectedKeys={[profile.activityLevel]}
+                    onSelectionChange={(keys) => {
+                      const selectedKey = Array.from(keys)[0] as string;
+                      setProfile((prev) => ({
+                        ...prev,
+                        activityLevel: selectedKey as "sedentary" | "light" | "moderate" | "active" | "very_active",
+                      }));
+                    }}
+                    isDisabled={isLoading}
+                    className="w-full"
+                    description="选择最符合您日常运动情况的选项"
+                  >
+                    <SelectItem key="sedentary">久坐 (很少或不运动)</SelectItem>
+                    <SelectItem key="light">轻度 (每周运动1-3天)</SelectItem>
+                    <SelectItem key="moderate">中度 (每周运动3-5天)</SelectItem>
+                    <SelectItem key="active">活跃 (每周运动6-7天)</SelectItem>
+                    <SelectItem key="very_active">非常活跃 (每天剧烈运动)</SelectItem>
+                  </Select>
+                </div>
 
-            <div className="form-group space-y-2">
-              <Select
-                label="活动水平"
-                placeholder="选择活动水平"
-                selectedKeys={[profile.activityLevel]}
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-                  setProfile((prev) => ({
-                    ...prev,
-                    activityLevel: selectedKey as any,
-                  }));
-                }}
-                isDisabled={isLoading}
-                description="选择最符合您日常运动情况的选项"
-              >
-                <SelectItem key="sedentary" value="sedentary">
-                  久坐 (很少或不运动)
-                </SelectItem>
-                <SelectItem key="light" value="light">
-                  轻度 (每周运动1-3天)
-                </SelectItem>
-                <SelectItem key="moderate">中度 (每周运动3-5天)</SelectItem>
-                <SelectItem key="active">活跃 (每周运动6-7天)</SelectItem>
-                <SelectItem key="very_active">
-                  非常活跃 (每天剧烈运动)
-                </SelectItem>
-              </Select>
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Input
+                    label="体重 (公斤)"
+                    variant="bordered"
+                    type="number"
+                    id="weight"
+                    name="weight"
+                    value={profile.weight ? profile.weight.toString() : ""}
+                    onChange={handleInputChange}
+                    min="1"
+                    step="0.1"
+                    isRequired
+                    isDisabled={isLoading}
+                    description="请输入您当前的体重"
+                  />
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="form-group space-y-2">
-              <label
-                htmlFor="weight"
-                className="required block text-sm font-medium text-foreground"
-              >
-                体重 (公斤) *
-              </label>
-              <Input
-                type="number"
-                id="weight"
-                name="weight"
-                value={profile.weight ? profile.weight.toString() : ""}
-                onChange={handleInputChange}
-                min="1"
-                step="0.1"
-                isRequired
-                isDisabled={isLoading}
-                description="请输入您当前的体重"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Input
+                    label="身高 (厘米)"
+                    variant="bordered"
+                    type="number"
+                    id="height"
+                    name="height"
+                    value={profile.height ? profile.height.toString() : ""}
+                    onChange={handleInputChange}
+                    min="1"
+                    isRequired
+                    isDisabled={isLoading}
+                    description="请输入您的身高"
+                  />
+                </div>
+              </div>
+            </CardBody>
+          </Card>
 
-            <div className="form-group space-y-2">
-              <label
-                htmlFor="height"
-                className="required block text-sm font-medium text-foreground"
-              >
-                身高 (厘米) *
-              </label>
-              <Input
-                type="number"
-                id="height"
-                name="height"
-                value={profile.height ? profile.height.toString() : ""}
-                onChange={handleInputChange}
-                min="1"
-                isRequired
-                isDisabled={isLoading}
-                description="请输入您的身高"
-              />
-            </div>
-          </div>
-        </div>
+          {/* 健康目标与偏好卡片 */}
+          <Card className="p-6">
+            <CardHeader className="pb-3">
+              <h3 className="text-xl font-semibold">健康目标与偏好</h3>
+            </CardHeader>
+            <Divider />
+            <CardBody className="pt-6 space-y-6">
+              <div className="space-y-2">
+                <Input
+                  label="健康目标"
+                  variant="bordered"
+                  type="text"
+                  id="healthGoals"
+                  value={profile.healthGoals.join(", ")}
+                  onChange={(e) => handleArrayInputChange(e, "healthGoals")}
+                  placeholder="例如: 减重, 增肌, 维持"
+                  isDisabled={isLoading}
+                  description="用逗号分隔多个目标"
+                />
+              </div>
 
-        <div className="form-section space-y-6">
-          <h3 className="form-section-title text-xl font-semibold text-foreground">
-            健康目标与偏好
-          </h3>
+              <div className="space-y-2">
+                <Input
+                  label="饮食偏好"
+                  variant="bordered"
+                  type="text"
+                  id="dietaryPreferences"
+                  value={profile.dietaryPreferences.join(", ")}
+                  onChange={(e) => handleArrayInputChange(e, "dietaryPreferences")}
+                  placeholder="例如: 素食, 低碳水, 生酮"
+                  isDisabled={isLoading}
+                  description="用逗号分隔多种偏好"
+                />
+              </div>
 
-          <div className="form-group space-y-2">
-            <label
-              htmlFor="healthGoals"
-              className="block text-sm font-medium text-foreground"
-            >
-              健康目标
-            </label>
-            <Input
-              type="text"
-              id="healthGoals"
-              value={profile.healthGoals.join(", ")}
-              onChange={(e) => handleArrayInputChange(e, "healthGoals")}
-              placeholder="例如: 减重, 增肌, 维持"
-              isDisabled={isLoading}
-            />
-          </div>
+              <div className="space-y-2">
+                <Input
+                  label="饮食限制"
+                  variant="bordered"
+                  type="text"
+                  id="dietaryRestrictions"
+                  value={profile.dietaryRestrictions.join(", ")}
+                  onChange={(e) => handleArrayInputChange(e, "dietaryRestrictions")}
+                  placeholder="例如: 无麸质, 无乳制品, 无坚果"
+                  isDisabled={isLoading}
+                  description="用逗号分隔多种限制"
+                />
+              </div>
 
-          <div className="form-group space-y-2">
-            <label
-              htmlFor="dietaryPreferences"
-              className="block text-sm font-medium text-foreground"
-            >
-              饮食偏好
-            </label>
-            <Input
-              type="text"
-              id="dietaryPreferences"
-              value={profile.dietaryPreferences.join(", ")}
-              onChange={(e) => handleArrayInputChange(e, "dietaryPreferences")}
-              placeholder="例如: 素食, 低碳水, 生酮"
-              isDisabled={isLoading}
-            />
-          </div>
+              <div className="space-y-2">
+                <Input
+                  label="过敏源"
+                  variant="bordered"
+                  type="text"
+                  id="allergies"
+                  value={profile.allergies.join(", ")}
+                  onChange={(e) => handleArrayInputChange(e, "allergies")}
+                  placeholder="例如: 坚果, 贝类, 大豆"
+                  isDisabled={isLoading}
+                  description="用逗号分隔多种过敏源"
+                />
+              </div>
+            </CardBody>
+          </Card>
 
-          <div className="form-group space-y-2">
-            <label
-              htmlFor="dietaryRestrictions"
-              className="block text-sm font-medium text-foreground"
-            >
-              饮食限制
-            </label>
-            <Input
-              type="text"
-              id="dietaryRestrictions"
-              value={profile.dietaryRestrictions.join(", ")}
-              onChange={(e) => handleArrayInputChange(e, "dietaryRestrictions")}
-              placeholder="例如: 无麸质, 无乳制品, 无坚果"
-              isDisabled={isLoading}
-            />
-          </div>
-
-          <div className="form-group space-y-2">
-            <label
-              htmlFor="allergies"
-              className="block text-sm font-medium text-foreground"
-            >
-              过敏源
-            </label>
-            <Input
-              type="text"
-              id="allergies"
-              value={profile.allergies.join(", ")}
-              onChange={(e) => handleArrayInputChange(e, "allergies")}
-              placeholder="例如: 坚果, 贝类, 大豆"
-              isDisabled={isLoading}
-            />
-          </div>
-        </div>
-
-        {/* 错误提示和重试 */}
-        {saveError && (
-          <div className="error-container bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="error text-red-800 mb-3">
-              <strong>保存失败：</strong>
-              {saveError}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleRetry}
-                disabled={isLoading}
-                variant="primary"
-                color="danger"
-              >
-                {isLoading ? "重试中..." : "重试"}
-              </Button>
-              <Button
-                onClick={() => setSaveError(null)}
-                variant="secondary"
-                color="default"
-              >
-                关闭
-              </Button>
-            </div>
-            {retryCount > 0 && (
-              <p className="text-sm text-gray-600 mt-2">
-                已重试 {retryCount} 次
-              </p>
-            )}
-          </div>
-        )}
-
-        <div className="form-actions flex flex-wrap gap-3 pt-4">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            color="primary"
-            className="min-w-[140px]"
-          >
-            {isLoading
-              ? "保存中..."
-              : existingProfile
-                ? "更新档案"
-                : "保存档案"}
-          </Button>
-
-          {existingProfile && (
-            <Button
-              onClick={handleDelete}
-              disabled={isLoading}
-              color="danger"
-              variant="outline"
-              className="min-w-[140px]"
-            >
-              删除档案
-            </Button>
+          {/* 错误提示和重试 */}
+          {saveError && (
+            <Card className="border-2 border-danger p-4 mb-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-danger text-xl">⚠️</span>
+                  <h3 className="text-danger font-semibold">保存失败</h3>
+                </div>
+                <p className="text-foreground-600">{saveError}</p>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    onClick={handleRetry}
+                    disabled={isLoading}
+                    color="danger"
+                    variant="solid"
+                  >
+                    {isLoading ? "重试中..." : "重试"}
+                  </Button>
+                  <Button
+                    onClick={() => setSaveError(null)}
+                    color="default"
+                    variant="bordered"
+                  >
+                    关闭
+                  </Button>
+                </div>
+                {retryCount > 0 && (
+                  <p className="text-sm text-foreground-500 mt-2">
+                    已重试 {retryCount} 次
+                  </p>
+                )}
+              </div>
+            </Card>
           )}
 
-          {/* 调试信息按钮 */}
-          <Button
-            onClick={() => {
-              console.log("当前档案数据:", profile);
-              console.log("现有档案:", existingProfile);
-              dispatchError({
-                type: "SHOW_ERROR",
-                payload: { message: "调试信息已输出到控制台", type: "info" },
-              });
-            }}
-            variant="outline"
-            color="primary"
-          >
-            调试信息
-          </Button>
-        </div>
-      </form>
-    </div>
+          <div className="flex flex-wrap gap-3 pt-4">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              color="primary"
+              size="lg"
+              className="min-w-[140px]"
+            >
+              {isLoading
+                ? (
+                  <>
+                    <span className="animate-spin mr-2">🌀</span> 保存中...
+                  </>
+                )
+                : existingProfile
+                  ? "🔄 更新档案"
+                  : "✅ 保存档案"}
+            </Button>
+
+            {existingProfile && (
+              <Button
+                onClick={handleDelete}
+                disabled={isLoading}
+                color="danger"
+                variant="flat"
+                size="lg"
+                className="min-w-[140px]"
+              >
+                🗑️ 删除档案
+              </Button>
+            )}
+
+            {/* 调试信息按钮 */}
+            <Button
+              onClick={() => {
+                console.log("当前档案数据:", profile);
+                console.log("现有档案:", existingProfile);
+                dispatchError({
+                  type: "SHOW_ERROR",
+                  payload: { message: "调试信息已输出到控制台", type: "info" },
+                });
+              }}
+              variant="bordered"
+              color="primary"
+              size="lg"
+            >
+              🐛 调试信息
+            </Button>
+          </div>
+        </form>
+      </CardBody>
+    </Card>
   );
 };
 

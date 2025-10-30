@@ -1,44 +1,54 @@
 import React from "react";
-import { Card, CardHeader, CardBody, Chip, Divider } from "@heroui/react";
+import { 
+  Card, 
+  CardHeader, 
+  CardBody, 
+  Divider,
+  Badge,
+  Listbox,
+  ListboxItem
+} from "@heroui/react";
 import RecommendationList from "./RecommendationList";
 
 const Recommendations: React.FC = () => {
   return (
-    <div className="recommendations-page max-w-6xl mx-auto p-4">
+    <div className="max-w-6xl mx-auto p-4">
       <Card className="w-full">
-        <CardHeader className="flex gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🍽️</span>
-            <div className="flex flex-col">
-              <p className="text-lg font-semibold">个性化饮食推荐</p>
-              <p className="text-sm text-default-500">基于您的健康档案和饮食偏好，为您精心推荐的健康饮食方案</p>
-            </div>
+        <CardHeader className="flex gap-3 items-center">
+          <Badge content="" color="primary" shape="circle" className="w-12 h-12 flex items-center justify-center">
+            <span className="text-xl">🍽️</span>
+          </Badge>
+          <div className="flex flex-col">
+            <h2 className="text-xl font-bold">个性化饮食推荐</h2>
+            <p className="text-sm text-foreground-500">基于您的健康档案和饮食偏好，为您精心推荐的健康饮食方案</p>
           </div>
         </CardHeader>
-        <Divider/>
+        <Divider />
         <CardBody>
           <div className="space-y-6">
-            <div className="bg-default-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">智能推荐特色：</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
-                  <span className="text-xl">🧠</span>
-                  <span className="text-sm">基于AI算法的个性化匹配</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
-                  <span className="text-xl">🌍</span>
-                  <span className="text-sm">结合地域文化和季节特色</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
-                  <span className="text-xl">⚖️</span>
-                  <span className="text-sm">营养均衡与热量控制</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
-                  <span className="text-xl">🎯</span>
-                  <span className="text-sm">匹配您的健康目标</span>
-                </div>
-              </div>
-            </div>
+            <Card className="p-4">
+              <CardBody className="p-4">
+                <h3 className="text-lg font-semibold mb-4">智能推荐特色：</h3>
+                <Listbox className="gap-3">
+                  <ListboxItem key="ai" className="flex items-center gap-3 p-2 hover:bg-default-50 rounded-lg transition-colors">
+                    <span className="text-xl">🧠</span>
+                    <span className="text-sm">基于AI算法的个性化匹配</span>
+                  </ListboxItem>
+                  <ListboxItem key="culture" className="flex items-center gap-3 p-2 hover:bg-default-50 rounded-lg transition-colors">
+                    <span className="text-xl">🌍</span>
+                    <span className="text-sm">结合地域文化和季节特色</span>
+                  </ListboxItem>
+                  <ListboxItem key="nutrition" className="flex items-center gap-3 p-2 hover:bg-default-50 rounded-lg transition-colors">
+                    <span className="text-xl">⚖️</span>
+                    <span className="text-sm">营养均衡与热量控制</span>
+                  </ListboxItem>
+                  <ListboxItem key="goals" className="flex items-center gap-3 p-2 hover:bg-default-50 rounded-lg transition-colors">
+                    <span className="text-xl">🎯</span>
+                    <span className="text-sm">匹配您的健康目标</span>
+                  </ListboxItem>
+                </Listbox>
+              </CardBody>
+            </Card>
             
             <Divider />
             

@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
-import { DietEntry } from '../../lib/types';
-import { logDietEntry, updateDietEntry } from '../../lib/api';
-import { useErrorDispatch } from '../../lib/ErrorContext';
-import { Button } from '../../components/common';
-import { Input, Textarea, Checkbox } from '@heroui/react';
+import React, { useState } from "react";
+import {
+  Input,
+  Select,
+  SelectItem,
+  Button,
+  Textarea,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Checkbox,
+  Divider,
+} from "@heroui/react";
+import { DietEntry } from "../../lib/types";
+import { logDietEntry, updateDietEntry } from "../../lib/api";
+import { useErrorDispatch } from "../../lib/ErrorContext";
 
 interface HistoryEntryFormProps {
   onEntryAdded?: () => void; // Callback when an entry is added
@@ -11,35 +22,49 @@ interface HistoryEntryFormProps {
   onCancel?: () => void; // Callback when cancel button is clicked
 }
 
-const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, existingEntry, onCancel }) => {
-  const [userId] = useState<string>(localStorage.getItem('userId') || 'default-user');
-  const [dietItemId, setDietItemId] = useState<string>(existingEntry?.dietItemId || '');
-  const [dateAttempted, setDateAttempted] = useState<string>(existingEntry?.dateAttempted || new Date().toISOString().split('T')[0]);
+const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({
+  onEntryAdded,
+  existingEntry,
+  onCancel,
+}) => {
+  const [userId] = useState<string>(
+    localStorage.getItem("userId") || "default-user",
+  );
+  const [dietItemId, setDietItemId] = useState<string>(
+    existingEntry?.dietItemId || "",
+  );
+  const [dateAttempted, setDateAttempted] = useState<string>(
+    existingEntry?.dateAttempted || new Date().toISOString().split("T")[0],
+  );
   const [rating, setRating] = useState<number>(existingEntry?.rating || 0);
-  const [notes, setNotes] = useState<string>(existingEntry?.notes || '');
-  const [wasPrepared, setWasPrepared] = useState<boolean>(existingEntry?.wasPrepared || true);
-  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>(existingEntry?.mealType || 'lunch');
+  const [notes, setNotes] = useState<string>(existingEntry?.notes || "");
+  const [wasPrepared, setWasPrepared] = useState<boolean>(
+    existingEntry?.wasPrepared || true,
+  );
+  const [mealType, setMealType] = useState<
+    "breakfast" | "lunch" | "dinner" | "snack"
+  >(existingEntry?.mealType || "lunch");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const dispatchError = useErrorDispatch();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     const newErrors: Record<string, string> = {};
     if (!dietItemId) {
-      newErrors.dietItemId = '饮食项目ID是必需的';
+      newErrors.dietItemId = "饮食项目ID是必需的";
     }
     if (!dateAttempted) {
-      newErrors.dateAttempted = '日期是必需的';
+      newErrors.dateAttempted = "日期是必需的";
     }
     if (rating && (rating < 1 || rating > 5)) {
-      newErrors.rating = '评分必须在1到5之间';
+      newErrors.rating = "评分必须在1到5之间";
     }
-    
+
     setErrors(newErrors);
-    
+
     if (Object.keys(newErrors).length > 0) {
       return;
     }
@@ -59,26 +84,32 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
       if (existingEntry) {
         // Update existing entry
         await updateDietEntry({
-          id: existingEntry.id || '',
+          id: existingEntry.id || "",
           rating: rating || undefined,
           notes: notes || undefined,
           wasPrepared,
         });
-        dispatchError({ type: 'SHOW_ERROR', payload: { message: '历史记录更新成功！', type: 'success' } });
+        dispatchError({
+          type: "SHOW_ERROR",
+          payload: { message: "历史记录更新成功！", type: "success" },
+        });
       } else {
         // Create new entry
         await logDietEntry(entry);
-        dispatchError({ type: 'SHOW_ERROR', payload: { message: '历史记录添加成功！', type: 'success' } });
+        dispatchError({
+          type: "SHOW_ERROR",
+          payload: { message: "历史记录添加成功！", type: "success" },
+        });
       }
 
       // Reset form
       if (!existingEntry) {
-        setDietItemId('');
-        setDateAttempted(new Date().toISOString().split('T')[0]);
+        setDietItemId("");
+        setDateAttempted(new Date().toISOString().split("T")[0]);
         setRating(0);
-        setNotes('');
+        setNotes("");
         setWasPrepared(true);
-        setMealType('lunch');
+        setMealType("lunch");
       }
 
       // Call the callback if provided
@@ -86,9 +117,13 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
         onEntryAdded();
       }
     } catch (error) {
-      console.error('Error submitting diet entry:', error);
-      const errorMessage = error instanceof Error ? error.message : '保存饮食记录失败';
-      dispatchError({ type: 'SHOW_ERROR', payload: { message: errorMessage, type: 'error' } });
+      console.error("Error submitting diet entry:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "保存饮食记录失败";
+      dispatchError({
+        type: "SHOW_ERROR",
+        payload: { message: errorMessage, type: "error" },
+      });
     } finally {
       setSubmitting(false);
     }
@@ -96,10 +131,15 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
 
   return (
     <div className="history-entry-form">
-      <h3 className="text-xl font-bold mb-4">{existingEntry ? '编辑历史记录' : '添加新的历史记录'}</h3>
+      <h3 className="text-xl font-bold mb-4">
+        {existingEntry ? "编辑历史记录" : "添加新的历史记录"}
+      </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="form-group space-y-2">
-          <label htmlFor="dietItemId" className="block text-sm font-medium text-foreground">
+          <label
+            htmlFor="dietItemId"
+            className="block text-sm font-medium text-foreground"
+          >
             饮食项目ID:
           </label>
           <Input
@@ -111,11 +151,16 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
             isDisabled={!!existingEntry} // Don't allow changing ID when editing
             isRequired
           />
-          {errors.dietItemId && <div className="text-danger text-sm">{errors.dietItemId}</div>}
+          {errors.dietItemId && (
+            <div className="text-danger text-sm">{errors.dietItemId}</div>
+          )}
         </div>
 
         <div className="form-group space-y-2">
-          <label htmlFor="dateAttempted" className="block text-sm font-medium text-foreground">
+          <label
+            htmlFor="dateAttempted"
+            className="block text-sm font-medium text-foreground"
+          >
             尝试日期:
           </label>
           <Input
@@ -125,59 +170,65 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
             onChange={(e) => setDateAttempted(e.target.value)}
             isRequired
           />
-          {errors.dateAttempted && <div className="text-danger text-sm">{errors.dateAttempted}</div>}
+          {errors.dateAttempted && (
+            <div className="text-danger text-sm">{errors.dateAttempted}</div>
+          )}
         </div>
 
         <div className="form-group space-y-2">
-          <label htmlFor="mealType" className="block text-sm font-medium text-foreground">
-            餐点类型:
-          </label>
-          <select
-            id="mealType"
-            value={mealType}
-            onChange={(e) => setMealType(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:border-gray-600"
+          <Select
+            label="餐点类型"
+            placeholder="选择餐点类型"
+            selectedKeys={[mealType]}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
+              setMealType(
+                selectedKey as "breakfast" | "lunch" | "dinner" | "snack",
+              );
+            }}
+            isRequired
           >
-            <option value="breakfast">早餐</option>
-            <option value="lunch">午餐</option>
-            <option value="dinner">晚餐</option>
-            <option value="snack">零食</option>
-          </select>
+            <SelectItem key="breakfast">早餐</SelectItem>
+            <SelectItem key="lunch">午餐</SelectItem>
+            <SelectItem key="dinner">晚餐</SelectItem>
+            <SelectItem key="snack">零食</SelectItem>
+          </Select>
         </div>
 
         <div className="form-group space-y-2">
-          <label htmlFor="rating" className="block text-sm font-medium text-foreground">
-            评分 (1-5): {rating || '未评分'}
+          <label className="block text-sm font-medium text-foreground">
+            评分 (1-5): {rating || "未评分"}
           </label>
-          <div className="pt-2">
-          <input
-            type="range"
-            id="rating"
-            value={rating}
-            onChange={(e) => setRating(parseInt(e.target.value))}
-            min="0"
-            max="5"
-            step="1"
-            className="w-full"
-          />
-          </div>
-          <div className="flex gap-1 mt-1">
+          <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
-              <button
+              <Button
                 key={star}
-                type="button"
-                className={`text-xl ${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`}
-                onClick={() => setRating(star)}
+                isIconOnly
+                variant="light"
+                className={`text-xl ${star <= rating ? "text-warning" : "text-default-300"}`}
+                onPress={() => setRating(star)}
                 aria-label={`评${star}星`}
               >
                 ★
-              </button>
+              </Button>
             ))}
+            <Button
+              isIconOnly
+              variant="light"
+              className="text-default-300"
+              onPress={() => setRating(0)}
+              aria-label="清除评分"
+            >
+              ✕
+            </Button>
           </div>
         </div>
 
         <div className="form-group space-y-2">
-          <label htmlFor="notes" className="block text-sm font-medium text-foreground">
+          <label
+            htmlFor="notes"
+            className="block text-sm font-medium text-foreground"
+          >
             备注:
           </label>
           <Textarea
@@ -200,11 +251,21 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({ onEntryAdded, exist
         </div>
 
         <div className="form-actions flex flex-wrap gap-3 pt-4">
-          <Button type="submit" disabled={submitting} variant="primary" color="primary">
-            {submitting ? '提交中...' : (existingEntry ? '更新记录' : '添加记录')}
+          <Button
+            type="submit"
+            isDisabled={submitting}
+            color="primary"
+            isLoading={submitting}
+          >
+            {submitting ? "提交中..." : existingEntry ? "更新记录" : "添加记录"}
           </Button>
           {existingEntry && onCancel && (
-            <Button type="button" onClick={onCancel} variant="outline" color="default">
+            <Button
+              type="button"
+              onPress={onCancel}
+              variant="bordered"
+              color="default"
+            >
               取消
             </Button>
           )}
