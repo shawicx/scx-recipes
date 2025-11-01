@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "@heroui/react";
 import "./Alert.css";
 
 export interface AlertProps {
@@ -26,13 +27,16 @@ const Alert: React.FC<AlertProps> = ({
       {showIcon && <span className="alert__icon">{typeToIcon[type]}</span>}
       <span className="alert__message">{message}</span>
       {onClose && (
-        <button
-          className="alert__close-btn"
-          onClick={onClose}
+        <Button
+          isIconOnly
+          size="sm"
+          variant="light"
+          onPress={onClose}
           aria-label="关闭提示"
+          className="alert__close-btn"
         >
           &times;
-        </button>
+        </Button>
       )}
     </div>
   );

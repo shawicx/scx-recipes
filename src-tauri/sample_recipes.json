@@ -1,37 +1,37 @@
 [
   {
     "id": "1",
-    "title": "Vegetable Stir Fry",
-    "description": "A healthy and quick vegetable stir fry with tofu",
+    "title": "蔬菜炒豆腐",
+    "description": "健康快捷的豆腐蔬菜炒菜",
     "ingredients": [
       {
-        "name": "Tofu",
+        "name": "豆腐",
         "amount": 200,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Broccoli",
+        "name": "西兰花",
         "amount": 150,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Bell Pepper",
+        "name": "甜椒",
         "amount": 1,
-        "unit": "unit",
+        "unit": "个",
         "optional": false
       },
       {
-        "name": "Carrot",
+        "name": "胡萝卜",
         "amount": 2,
-        "unit": "unit",
+        "unit": "根",
         "optional": false
       },
       {
-        "name": "Soy Sauce",
+        "name": "酱油",
         "amount": 2,
-        "unit": "tbsp",
+        "unit": "汤匙",
         "optional": false
       }
     ],
@@ -45,44 +45,44 @@
     "preparation_time": 20,
     "difficulty_level": "easy",
     "meal_type": "lunch",
-    "recipe_instructions": "1. Press and cube the tofu. 2. Chop all vegetables. 3. Heat oil in a pan and fry tofu until golden. 4. Add vegetables and stir fry for 5-7 minutes. 5. Add soy sauce and cook for another 2 minutes.",
+    "recipe_instructions": "1. 将豆腐压干切块。2. 将所有蔬菜切好。3. 在锅中加热油，将豆腐煎至金黄色。4. 加入蔬菜翻炒5-7分钟。5. 加入酱油再煮2分钟。",
     "cuisine_type": "Asian",
     "seasonal": false,
     "tags": ["vegetarian", "low_carb", "high_protein"]
   },
   {
     "id": "2",
-    "title": "Chicken Salad",
-    "description": "Fresh and healthy grilled chicken salad",
+    "title": "鸡肉沙拉",
+    "description": "新鲜健康的烤鸡胸肉沙拉",
     "ingredients": [
       {
-        "name": "Chicken Breast",
+        "name": "鸡胸肉",
         "amount": 150,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Lettuce",
+        "name": "生菜",
         "amount": 100,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Cherry Tomatoes",
+        "name": "樱桃番茄",
         "amount": 125,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Cucumber",
+        "name": "黄瓜",
         "amount": 0.5,
-        "unit": "unit",
+        "unit": "根",
         "optional": false
       },
       {
-        "name": "Olive Oil",
+        "name": "橄榄油",
         "amount": 1,
-        "unit": "tbsp",
+        "unit": "汤匙",
         "optional": false
       }
     ],
@@ -96,38 +96,38 @@
     "preparation_time": 25,
     "difficulty_level": "easy",
     "meal_type": "lunch",
-    "recipe_instructions": "1. Grill chicken breast until cooked through. 2. Chop vegetables. 3. Combine all ingredients in a bowl. 4. Drizzle with olive oil and season to taste.",
+    "recipe_instructions": "1. 将鸡胸肉烤至全熟。2. 将蔬菜切好。3. 将所有食材放入碗中混合。4. 淋上橄榄油并按口味调味。",
     "cuisine_type": "Western",
     "seasonal": false,
     "tags": ["high_protein", "low_carb"]
   },
   {
     "id": "3",
-    "title": "Oatmeal with Berries",
-    "description": "Nutritious breakfast with oats and fresh berries",
+    "title": "燕麦浆果",
+    "description": "营养丰富的燕麦与新鲜浆果早餐",
     "ingredients": [
       {
-        "name": "Oats",
+        "name": "燕麦",
         "amount": 40,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Milk",
+        "name": "牛奶",
         "amount": 200,
         "unit": "ml",
         "optional": false
       },
       {
-        "name": "Mixed Berries",
+        "name": "混合浆果",
         "amount": 100,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Honey",
+        "name": "蜂蜜",
         "amount": 1,
-        "unit": "tsp",
+        "unit": "茶匙",
         "optional": false
       }
     ],
@@ -141,42 +141,42 @@
     "preparation_time": 10,
     "difficulty_level": "easy",
     "meal_type": "breakfast",
-    "recipe_instructions": "1. Cook oats with milk according to package instructions. 2. Top with fresh berries. 3. Drizzle with honey if desired.",
+    "recipe_instructions": "1. 按照包装说明用牛奶煮燕麦。2. 搭配新鲜浆果。3. 如需要可淋上蜂蜜。",
     "cuisine_type": "Western",
     "seasonal": false,
     "tags": ["vegetarian", "high_fiber", "breakfast"]
   },
   {
     "id": "4",
-    "title": "Lentil Soup",
-    "description": "Hearty and nutritious lentil soup",
+    "title": "扁豆汤",
+    "description": "丰富营养的扁豆汤",
     "ingredients": [
       {
-        "name": "Red Lentils",
+        "name": "红扁豆",
         "amount": 150,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Carrots",
+        "name": "胡萝卜",
         "amount": 2,
-        "unit": "unit",
+        "unit": "根",
         "optional": false
       },
       {
-        "name": "Celery",
+        "name": "芹菜",
         "amount": 2,
-        "unit": "stalks",
+        "unit": "根",
         "optional": false
       },
       {
-        "name": "Onion",
+        "name": "洋葱",
         "amount": 1,
-        "unit": "unit",
+        "unit": "个",
         "optional": false
       },
       {
-        "name": "Vegetable Stock",
+        "name": "蔬菜高汤",
         "amount": 750,
         "unit": "ml",
         "optional": false
@@ -192,44 +192,44 @@
     "preparation_time": 35,
     "difficulty_level": "medium",
     "meal_type": "lunch",
-    "recipe_instructions": "1. Sauté onion, carrots, and celery. 2. Add lentils and stock. 3. Simmer for 25 minutes until lentils are soft. 4. Season to taste.",
+    "recipe_instructions": "1. 炒香洋葱、胡萝卜和芹菜。2. 加入扁豆和高汤。3. 炖煮25分钟至扁豆变软。4. 按口味调味。",
     "cuisine_type": "European",
     "seasonal": true,
     "tags": ["vegetarian", "vegan", "high_fiber", "high_protein"]
   },
   {
     "id": "5",
-    "title": "Salmon with Quinoa",
-    "description": "Baked salmon with quinoa and steamed vegetables",
+    "title": "三文鱼配藜麦",
+    "description": "烤三文鱼配藜麦和蒸蔬菜",
     "ingredients": [
       {
-        "name": "Salmon Fillet",
+        "name": "三文鱼",
         "amount": 150,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Quinoa",
+        "name": "藜麦",
         "amount": 100,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Broccoli",
+        "name": "西兰花",
         "amount": 100,
         "unit": "g",
         "optional": false
       },
       {
-        "name": "Lemon",
+        "name": "柠檬",
         "amount": 0.5,
-        "unit": "unit",
+        "unit": "个",
         "optional": false
       },
       {
-        "name": "Olive Oil",
+        "name": "橄榄油",
         "amount": 1,
-        "unit": "tbsp",
+        "unit": "汤匙",
         "optional": false
       }
     ],
@@ -243,7 +243,7 @@
     "preparation_time": 30,
     "difficulty_level": "medium",
     "meal_type": "dinner",
-    "recipe_instructions": "1. Preheat oven to 200°C. 2. Season salmon and bake for 15-20 minutes. 3. Cook quinoa according to package instructions. 4. Steam broccoli. 5. Serve together with lemon and olive oil.",
+    "recipe_instructions": "1. 烤箱预热至200°C。2. 调味三文鱼并烘烤15-20分钟。3. 按照包装说明煮藜麦。4. 蒸西兰花。5. 与柠檬和橄榄油一起上桌。",
     "cuisine_type": "European",
     "seasonal": false,
     "tags": ["high_protein", "high_omega3", "balanced"]

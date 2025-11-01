@@ -30,20 +30,20 @@ export const saveHealthProfile = async (
     created_at: profile.createdAt,
     updated_at: profile.updatedAt,
   };
-  
+
   return await invoke("save_health_profile", { profile: profileDto });
 };
 
 export const getHealthProfile = async (
   userId: string,
 ): Promise<HealthProfile | null> => {
-  const result = await invoke("get_health_profile", { userId });
-  
+  const result: any = await invoke("get_health_profile", { userId });
+
   // 如果没有结果，返回null
   if (!result) {
     return null;
   }
-  
+
   // 将后端的下划线命名转换为前端期望的驼峰命名
   return {
     id: result.id,
@@ -70,8 +70,8 @@ export const deleteHealthProfile = async (userId: string): Promise<boolean> => {
 export const getRecommendations = async (
   userId: string,
 ): Promise<RecommendationItem[]> => {
-  const result = await invoke("get_recommendations", { userId });
-  
+  const result: any[] = await invoke("get_recommendations", { userId });
+
   // 转换返回结果的字段名
   return result.map((item: any) => ({
     id: item.id,
@@ -117,7 +117,7 @@ export const logDietEntry = async (entry: DietEntry): Promise<string> => {
     created_at: entry.createdAt,
     updated_at: entry.updatedAt,
   };
-  
+
   return await invoke("log_diet_entry", { entry: entryDto });
 };
 
@@ -133,9 +133,9 @@ export const getDietHistory = async (
     offset: params.offset,
     meal_type: params.mealType,
   };
-  
-  const result = await invoke("get_diet_history", { params: paramsDto });
-  
+
+  const result: any[] = await invoke("get_diet_history", { params: paramsDto });
+
   // 转换返回结果的字段名
   return result.map((entry: any) => ({
     id: entry.id,
@@ -161,7 +161,7 @@ export const getDietHistoryCount = async (
     end_date: params.endDate,
     meal_type: params.mealType,
   };
-  
+
   try {
     return await invoke("get_diet_history_count", { params: paramsDto });
   } catch (error) {
