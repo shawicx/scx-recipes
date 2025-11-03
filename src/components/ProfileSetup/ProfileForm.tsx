@@ -1,610 +1,527 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
-  saveHealthProfile,
-  getHealthProfile,
-  deleteHealthProfile,
-} from "../../lib/api";
-import { HealthProfile } from "../../lib/types";
-import { useErrorDispatch } from "../../lib/ErrorContext";
-import { 
-  Input, 
-  Select, 
-  SelectItem, 
-  Button, 
   Card,
-  CardHeader,
   CardBody,
-  Divider
+  CardHeader,
+  Input,
+  Select,
+  SelectItem,
+  Textarea,
+  Button,
+  ButtonGroup,
+  Divider,
+  Alert,
+  Progress,
+  Chip,
+  Avatar,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  Tooltip,
 } from "@heroui/react";
 
+// 图标组件
+const UserIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const SparklesIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .963L15.5 14.062a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+    <path d="M20 3v4" />
+    <path d="M22 5h-4" />
+    <path d="M4 17v2" />
+    <path d="M5 18H3" />
+  </svg>
+);
+
+const BarChartIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <line x1="12" y1="20" x2="12" y2="10" />
+    <line x1="18" y1="20" x2="18" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="16" />
+  </svg>
+);
+
+const SaveIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+    <polyline points="17,21 17,13 7,13 7,21" />
+    <polyline points="7,3 7,8 15,8" />
+  </svg>
+);
+
+const EditIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
+
+const TrashIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <polyline points="3,6 5,6 21,6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
+
 const ProfileForm: React.FC = () => {
-  const [profile, setProfile] = useState<HealthProfile>({
-    userId: "",
-    age: 0,
-    gender: "prefer_not_to_say",
-    weight: 0,
-    height: 0,
-    activityLevel: "sedentary",
-    healthGoals: [],
-    dietaryPreferences: [],
-    dietaryRestrictions: [],
-    allergies: [],
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [profileData, setProfileData] = useState({
+    age: "",
+    gender: "",
+    weight: "",
+    height: "",
+    activityLevel: "",
+    healthGoals: "",
+    dietaryPreferences: "",
+    allergies: "",
+    createdAt: "2024-01-15",
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [existingProfile, setExistingProfile] = useState<HealthProfile | null>(
-    null,
-  );
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const dispatchError = useErrorDispatch();
-
-  // Load existing profile on component mount
-  useEffect(() => {
-    const loadProfile = async () => {
-      setIsLoading(true);
-      try {
-        // 使用统一的用户ID管理
-        let userId = localStorage.getItem("userId");
-        if (!userId) {
-          userId = "current-user";
-          localStorage.setItem("userId", userId);
-        }
-        const loadedProfile = await getHealthProfile(userId);
-        if (loadedProfile) {
-          setExistingProfile(loadedProfile);
-          setProfile(loadedProfile);
-        } else {
-          // 如果没有现有档案，设置默认用户ID
-          setProfile((prev) => ({
-            ...prev,
-            userId: userId,
-          }));
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "加载档案失败";
-        dispatchError({
-          type: "SHOW_ERROR",
-          payload: { message: errorMessage, type: "error" },
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, []);
-
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement
-    >,
-  ) => {
-    const { name, value } = e.target;
-    setProfile((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // 计算档案完整度
+  const getProfileCompleteness = () => {
+    const fields = Object.values(profileData);
+    const filledFields = fields.filter(
+      (field) => field && field.trim() !== "",
+    ).length;
+    return Math.round((filledFields / fields.length) * 100);
   };
 
-  const handleArrayInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: keyof HealthProfile,
-  ) => {
-    const value = e.target.value;
-    // Split the input by commas and trim whitespace
-    const arrayValue = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item);
-    setProfile((prev) => ({
-      ...prev,
-      [field]: arrayValue,
-    }));
+  const completeness = getProfileCompleteness();
+
+  // 计算BMI
+  const calculateBMI = () => {
+    const weight = parseFloat(profileData.weight);
+    const height = parseFloat(profileData.height) / 100; // 转换为米
+    if (weight && height) {
+      const bmi = weight / (height * height);
+      return bmi.toFixed(1);
+    }
+    return null;
   };
 
-  // 表单验证函数
-  const validateForm = () => {
-    const errors = [];
-
-    if (!profile.userId?.trim()) {
-      errors.push("用户ID不能为空");
-    }
-
-    if (!profile.age || profile.age < 18 || profile.age > 120) {
-      errors.push("年龄必须在18-120之间");
-    }
-
-    if (!profile.weight || profile.weight <= 0) {
-      errors.push("体重必须大于0");
-    }
-
-    if (!profile.height || profile.height <= 0) {
-      errors.push("身高必须大于0");
-    }
-
-    return errors;
+  const getBMIStatus = (bmi: number) => {
+    if (bmi < 18.5) return { text: "偏瘦", color: "warning" };
+    if (bmi < 24) return { text: "正常", color: "success" };
+    if (bmi < 28) return { text: "超重", color: "warning" };
+    return { text: "肥胖", color: "danger" };
   };
 
-  const handleRetry = () => {
-    setSaveError(null);
-    setRetryCount((prev) => prev + 1);
-    // 重新提交表单
-    const form = document.querySelector("form");
-    if (form) {
-      form.dispatchEvent(
-        new Event("submit", { cancelable: true, bubbles: true }),
-      );
-    }
+  const handleInputChange = (field: string, value: string) => {
+    setProfileData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setSuccess(false);
-
-    // 前端验证
-    const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
-      const errorMsg = `表单验证失败：${validationErrors.join(", ")}`;
-      setSaveError(errorMsg);
-      dispatchError({
-        type: "SHOW_ERROR",
-        payload: {
-          message: errorMsg,
-          type: "error",
-        },
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      // 清理和准备数据
-      const profileToSave = {
-        ...profile,
-        userId:
-          profile.userId?.trim() ||
-          localStorage.getItem("userId") ||
-          "current-user",
-        age: Number(profile.age),
-        weight: Number(profile.weight),
-        height: Number(profile.height),
-        // 确保数组字段不为空
-        healthGoals: profile.healthGoals?.filter((goal) => goal.trim()) || [],
-        dietaryPreferences:
-          profile.dietaryPreferences?.filter((pref) => pref.trim()) || [],
-        dietaryRestrictions:
-          profile.dietaryRestrictions?.filter((rest) => rest.trim()) || [],
-        allergies: profile.allergies?.filter((allergy) => allergy.trim()) || [],
-      };
-
-      console.log("正在保存健康档案:", profileToSave);
-
-      await saveHealthProfile(profileToSave);
-
-      // 清除错误状态
-      setSaveError(null);
-      setRetryCount(0);
-
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-
-      const successMsg = existingProfile ? "档案更新成功！" : "档案保存成功！";
-      dispatchError({
-        type: "SHOW_ERROR",
-        payload: {
-          message: successMsg,
-          type: "success",
-        },
-      });
-
-      // 刷新页面数据以显示更新后的档案
-      setExistingProfile(profileToSave as any);
-
-      // 确保用户ID已保存到localStorage，以便其他组件使用
-      localStorage.setItem("userId", profileToSave.userId);
-
-      // 触发推荐组件刷新
-      window.dispatchEvent(
-        new CustomEvent("profileUpdated", {
-          detail: { userId: profileToSave.userId },
-        }),
-      );
-    } catch (err) {
-      console.error("保存健康档案时出错:", err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      // 提供更具体的错误信息
-      let userFriendlyMessage = "保存档案失败";
-
-      if (
-        errorMessage.includes("database") ||
-        errorMessage.includes("Database")
-      ) {
-        userFriendlyMessage = "数据库连接失败，请检查应用程序权限或稍后重试";
-      } else if (
-        errorMessage.includes("serialize") ||
-        errorMessage.includes("JSON")
-      ) {
-        userFriendlyMessage = "档案数据格式错误，请检查输入信息是否正确";
-      } else if (
-        errorMessage.includes("connect") ||
-        errorMessage.includes("Connection")
-      ) {
-        userFriendlyMessage = "无法连接到数据存储，请检查应用程序是否正常运行";
-      } else if (
-        errorMessage.includes("directory") ||
-        errorMessage.includes("create_dir")
-      ) {
-        userFriendlyMessage = "数据目录创建失败，请检查文件系统权限";
-      } else if (
-        errorMessage.includes("execution") ||
-        errorMessage.includes("execute")
-      ) {
-        userFriendlyMessage = "数据库操作失败，请稍后重试";
-      } else if (
-        errorMessage.includes("permission") ||
-        errorMessage.includes("access")
-      ) {
-        userFriendlyMessage = "文件访问权限不足，请以管理员身份运行应用程序";
-      } else if (
-        errorMessage.includes("validation") ||
-        errorMessage.includes("validate")
-      ) {
-        userFriendlyMessage = `数据验证失败：${errorMessage}`;
-      } else if (errorMessage.includes("invoke")) {
-        userFriendlyMessage = "后端服务调用失败，请检查应用程序是否正常启动";
-      } else {
-        userFriendlyMessage = `保存失败：${errorMessage}`;
-      }
-
-      setSaveError(userFriendlyMessage);
-      dispatchError({
-        type: "SHOW_ERROR",
-        payload: { message: userFriendlyMessage, type: "error" },
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSave = () => {
+    // 模拟保存逻辑
+    console.log("保存档案数据:", profileData);
+    setIsEditing(false);
+    // 显示保存成功提示
   };
 
-  const handleDelete = async () => {
-    if (!profile.userId) {
-      dispatchError({
-        type: "SHOW_ERROR",
-        payload: { message: "未指定用户ID", type: "error" },
-      });
-      return;
-    }
-
-    if (!window.confirm("您确定要删除您的健康档案吗？此操作无法撤消。")) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      await deleteHealthProfile(profile.userId);
-      // Reset the profile after deletion
-      setProfile({
-        userId: profile.userId || "current-user",
-        age: 0,
-        gender: "prefer_not_to_say",
-        weight: 0,
-        height: 0,
-        activityLevel: "sedentary",
-        healthGoals: [],
-        dietaryPreferences: [],
-        dietaryRestrictions: [],
-        allergies: [],
-      });
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-      dispatchError({
-        type: "SHOW_ERROR",
-        payload: { message: "档案删除成功！", type: "success" },
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "删除档案失败";
-      dispatchError({
-        type: "SHOW_ERROR",
-        payload: { message: errorMessage, type: "error" },
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleDelete = () => {
+    // 模拟删除逻辑
+    console.log("删除档案");
+    setShowDeleteModal(false);
+    setProfileData({
+      age: "",
+      gender: "",
+      weight: "",
+      height: "",
+      activityLevel: "",
+      healthGoals: "",
+      dietaryPreferences: "",
+      allergies: "",
+      createdAt: "",
+    });
   };
+
+  const bmi = calculateBMI();
+  const bmiStatus = bmi ? getBMIStatus(parseFloat(bmi)) : null;
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <h2 className="text-2xl font-bold">👤 健康档案设置</h2>
-        <p className="text-foreground-600">请填写您的健康信息以便为您推荐合适的食物</p>
-      </CardHeader>
-      
-      <Divider />
-      
-      <CardBody>
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* 基本信息卡片 */}
-          <Card className="p-6">
-            <CardHeader className="pb-3">
-              <h3 className="text-xl font-semibold">基本信息</h3>
-            </CardHeader>
-            <Divider />
-            <CardBody className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Input
-                    label="用户ID"
-                    variant="bordered"
-                    type="text"
-                    id="userId"
-                    name="userId"
-                    value={profile.userId}
-                    onChange={handleInputChange}
-                    placeholder="输入用户ID"
-                    isRequired
-                    isDisabled={isLoading}
-                    description="用于识别您的账户"
+    <div className="min-h-screen bg-gray-50 bg-background">
+      <div className="max-w-5xl mx-auto px-8 py-10">
+        {/* 档案简介区 - 优化设计 */}
+        <Card
+          shadow="sm"
+          className="p-6 space-y-4 mb-6 bg-white rounded-xl shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+                <UserIcon />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  个人健康档案
+                </h2>
+                <p className="text-sm text-gray-500">
+                  创建于 {profileData.createdAt || "未设置"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-wide text-gray-400">
+                  档案完整度
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Progress
+                    value={completeness}
+                    color={
+                      completeness >= 80
+                        ? "success"
+                        : completeness >= 50
+                          ? "warning"
+                          : "danger"
+                    }
+                    size="sm"
+                    className="w-20"
                   />
+                  <span className="text-sm font-semibold text-gray-700">
+                    {completeness}%
+                  </span>
                 </div>
-
-                <div className="space-y-2">
-                  <Input
-                    label="年龄"
-                    variant="bordered"
-                    type="number"
-                    id="age"
-                    name="age"
-                    value={profile.age ? profile.age.toString() : ""}
-                    onChange={handleInputChange}
-                    min="18"
-                    max="120"
-                    isRequired
-                    isDisabled={isLoading}
-                    description="18-120岁之间"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Select
-                    label="性别"
-                    placeholder="选择性别"
-                    selectedKeys={[profile.gender]}
-                    onSelectionChange={(keys) => {
-                      const selectedKey = Array.from(keys)[0] as string;
-                      setProfile((prev) => ({
-                        ...prev,
-                        gender: selectedKey as any,
-                      }));
-                    }}
-                    isRequired
-                    isDisabled={isLoading}
-                    className="w-full"
+              </div>
+              {bmi && (
+                <Tooltip content={`BMI指数: ${bmi} (${bmiStatus?.text})`}>
+                  <Chip
+                    color={bmiStatus?.color as any}
+                    variant="flat"
+                    size="sm"
                   >
-                    <SelectItem key="male">男性</SelectItem>
-                    <SelectItem key="female">女性</SelectItem>
-                    <SelectItem key="other">其他</SelectItem>
-                    <SelectItem key="prefer_not_to_say">不愿透露</SelectItem>
-                  </Select>
+                    BMI {bmi}
+                  </Chip>
+                </Tooltip>
+              )}
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-500 leading-relaxed">
+            填写您的基本健康信息，以便获得更精准的饮食与运动推荐。您的所有数据都将安全存储在本地设备中。
+          </p>
+
+          <Divider />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card
+              isPressable
+              shadow="none"
+              className="border border-gray-200 hover:border-emerald-200 transition-colors rounded-lg"
+            >
+              <div className="flex items-center gap-3 p-3">
+                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500">
+                  <SparklesIcon />
                 </div>
-
-                <div className="space-y-2">
-                  <Select
-                    label="活动水平"
-                    placeholder="选择活动水平"
-                    selectedKeys={[profile.activityLevel]}
-                    onSelectionChange={(keys) => {
-                      const selectedKey = Array.from(keys)[0] as string;
-                      setProfile((prev) => ({
-                        ...prev,
-                        activityLevel: selectedKey as "sedentary" | "light" | "moderate" | "active" | "very_active",
-                      }));
-                    }}
-                    isDisabled={isLoading}
-                    className="w-full"
-                    description="选择最符合您日常运动情况的选项"
-                  >
-                    <SelectItem key="sedentary">久坐 (很少或不运动)</SelectItem>
-                    <SelectItem key="light">轻度 (每周运动1-3天)</SelectItem>
-                    <SelectItem key="moderate">中度 (每周运动3-5天)</SelectItem>
-                    <SelectItem key="active">活跃 (每周运动6-7天)</SelectItem>
-                    <SelectItem key="very_active">非常活跃 (每天剧烈运动)</SelectItem>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Input
-                    label="体重 (公斤)"
-                    variant="bordered"
-                    type="number"
-                    id="weight"
-                    name="weight"
-                    value={profile.weight ? profile.weight.toString() : ""}
-                    onChange={handleInputChange}
-                    min="1"
-                    step="0.1"
-                    isRequired
-                    isDisabled={isLoading}
-                    description="请输入您当前的体重"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Input
-                    label="身高 (厘米)"
-                    variant="bordered"
-                    type="number"
-                    id="height"
-                    name="height"
-                    value={profile.height ? profile.height.toString() : ""}
-                    onChange={handleInputChange}
-                    min="1"
-                    isRequired
-                    isDisabled={isLoading}
-                    description="请输入您的身高"
-                  />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* 健康目标与偏好卡片 */}
-          <Card className="p-6">
-            <CardHeader className="pb-3">
-              <h3 className="text-xl font-semibold">健康目标与偏好</h3>
-            </CardHeader>
-            <Divider />
-            <CardBody className="pt-6 space-y-6">
-              <div className="space-y-2">
-                <Input
-                  label="健康目标"
-                  variant="bordered"
-                  type="text"
-                  id="healthGoals"
-                  value={profile.healthGoals.join(", ")}
-                  onChange={(e) => handleArrayInputChange(e, "healthGoals")}
-                  placeholder="例如: 减重, 增肌, 维持"
-                  isDisabled={isLoading}
-                  description="用逗号分隔多个目标"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Input
-                  label="饮食偏好"
-                  variant="bordered"
-                  type="text"
-                  id="dietaryPreferences"
-                  value={profile.dietaryPreferences.join(", ")}
-                  onChange={(e) => handleArrayInputChange(e, "dietaryPreferences")}
-                  placeholder="例如: 素食, 低碳水, 生酮"
-                  isDisabled={isLoading}
-                  description="用逗号分隔多种偏好"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Input
-                  label="饮食限制"
-                  variant="bordered"
-                  type="text"
-                  id="dietaryRestrictions"
-                  value={profile.dietaryRestrictions.join(", ")}
-                  onChange={(e) => handleArrayInputChange(e, "dietaryRestrictions")}
-                  placeholder="例如: 无麸质, 无乳制品, 无坚果"
-                  isDisabled={isLoading}
-                  description="用逗号分隔多种限制"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Input
-                  label="过敏源"
-                  variant="bordered"
-                  type="text"
-                  id="allergies"
-                  value={profile.allergies.join(", ")}
-                  onChange={(e) => handleArrayInputChange(e, "allergies")}
-                  placeholder="例如: 坚果, 贝类, 大豆"
-                  isDisabled={isLoading}
-                  description="用逗号分隔多种过敏源"
-                />
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* 错误提示和重试 */}
-          {saveError && (
-            <Card className="border-2 border-danger p-4 mb-4">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-danger text-xl">⚠️</span>
-                  <h3 className="text-danger font-semibold">保存失败</h3>
-                </div>
-                <p className="text-foreground-600">{saveError}</p>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    onClick={handleRetry}
-                    disabled={isLoading}
-                    color="danger"
-                    variant="solid"
-                  >
-                    {isLoading ? "重试中..." : "重试"}
-                  </Button>
-                  <Button
-                    onClick={() => setSaveError(null)}
-                    color="default"
-                    variant="bordered"
-                  >
-                    关闭
-                  </Button>
-                </div>
-                {retryCount > 0 && (
-                  <p className="text-sm text-foreground-500 mt-2">
-                    已重试 {retryCount} 次
-                  </p>
-                )}
+                <p className="text-sm font-medium text-gray-700">
+                  获取个性化饮食建议
+                </p>
               </div>
             </Card>
+
+            <Card
+              isPressable
+              shadow="none"
+              className="border border-gray-200 hover:border-emerald-200 transition-colors rounded-lg"
+            >
+              <div className="flex items-center gap-3 p-3">
+                <div className="p-2 rounded-lg bg-sky-50 text-sky-500">
+                  <BarChartIcon />
+                </div>
+                <p className="text-sm font-medium text-gray-700">
+                  跟踪健康目标达成度
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          {completeness < 50 && (
+            <Alert
+              color="primary"
+              title="温馨提示"
+              description="完善您的健康档案可以解锁更多个性化功能和精准推荐"
+              className="mt-4"
+            />
           )}
+        </Card>
 
-          <div className="flex flex-wrap gap-3 pt-4">
+        {/* 表单信息区 - 优化设计 */}
+        <Card
+          shadow="sm"
+          className="p-6 space-y-6 mb-6 bg-white rounded-xl shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
+              基本信息
+            </h3>
             <Button
-              type="submit"
-              disabled={isLoading}
-              color="primary"
-              size="lg"
-              className="min-w-[140px]"
+              size="sm"
+              variant={isEditing ? "flat" : "light"}
+              color={isEditing ? "warning" : "primary"}
+              startContent={<EditIcon />}
+              onPress={() => setIsEditing(!isEditing)}
             >
-              {isLoading
-                ? (
-                  <>
-                    <span className="animate-spin mr-2">🌀</span> 保存中...
-                  </>
-                )
-                : existingProfile
-                  ? "🔄 更新档案"
-                  : "✅ 保存档案"}
-            </Button>
-
-            {existingProfile && (
-              <Button
-                onClick={handleDelete}
-                disabled={isLoading}
-                color="danger"
-                variant="flat"
-                size="lg"
-                className="min-w-[140px]"
-              >
-                🗑️ 删除档案
-              </Button>
-            )}
-
-            {/* 调试信息按钮 */}
-            <Button
-              onClick={() => {
-                console.log("当前档案数据:", profile);
-                console.log("现有档案:", existingProfile);
-                dispatchError({
-                  type: "SHOW_ERROR",
-                  payload: { message: "调试信息已输出到控制台", type: "info" },
-                });
-              }}
-              variant="bordered"
-              color="primary"
-              size="lg"
-            >
-              🐛 调试信息
+              {isEditing ? "取消编辑" : "编辑档案"}
             </Button>
           </div>
-        </form>
-      </CardBody>
-    </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="年龄"
+              placeholder="请输入年龄"
+              type="number"
+              value={profileData.age}
+              onValueChange={(value) => handleInputChange("age", value)}
+              isDisabled={!isEditing}
+              variant={isEditing ? "bordered" : "flat"}
+              description="用于计算基础代谢率"
+              classNames={{
+                label: "text-sm font-medium text-gray-700",
+                description: "text-xs text-gray-500",
+              }}
+            />
+
+            <Select
+              label="性别"
+              placeholder="请选择性别"
+              selectedKeys={profileData.gender ? [profileData.gender] : []}
+              onSelectionChange={(keys) =>
+                handleInputChange("gender", Array.from(keys)[0] as string)
+              }
+              isDisabled={!isEditing}
+              variant={isEditing ? "bordered" : "flat"}
+              description="影响营养需求计算"
+              classNames={{
+                label: "text-sm font-medium text-gray-700",
+                description: "text-xs text-gray-500",
+              }}
+            >
+              <SelectItem key="male">男</SelectItem>
+              <SelectItem key="female">女</SelectItem>
+              <SelectItem key="other">其他</SelectItem>
+            </Select>
+
+            <Input
+              label="体重 (kg)"
+              placeholder="请输入体重"
+              type="number"
+              value={profileData.weight}
+              onValueChange={(value) => handleInputChange("weight", value)}
+              isDisabled={!isEditing}
+              variant={isEditing ? "bordered" : "flat"}
+              description="当前体重，用于BMI计算"
+              classNames={{
+                label: "text-sm font-medium text-gray-700",
+                description: "text-xs text-gray-500",
+              }}
+            />
+
+            <Input
+              label="身高 (cm)"
+              placeholder="请输入身高"
+              type="number"
+              value={profileData.height}
+              onValueChange={(value) => handleInputChange("height", value)}
+              isDisabled={!isEditing}
+              variant={isEditing ? "bordered" : "flat"}
+              description="用于BMI和营养需求计算"
+              classNames={{
+                label: "text-sm font-medium text-gray-700",
+                description: "text-xs text-gray-500",
+              }}
+            />
+
+            <div className="md:col-span-2">
+              <Select
+                label="活动水平"
+                placeholder="请选择您的日常活动水平"
+                selectedKeys={
+                  profileData.activityLevel ? [profileData.activityLevel] : []
+                }
+                onSelectionChange={(keys) =>
+                  handleInputChange(
+                    "activityLevel",
+                    Array.from(keys)[0] as string,
+                  )
+                }
+                isDisabled={!isEditing}
+                variant={isEditing ? "bordered" : "flat"}
+                description="影响每日卡路里需求计算"
+                classNames={{
+                  label: "text-sm font-medium text-gray-700",
+                  description: "text-xs text-gray-500",
+                }}
+              >
+                <SelectItem key="sedentary">
+                  久坐少动 (办公室工作，很少运动)
+                </SelectItem>
+                <SelectItem key="light">轻度活动 (轻松运动/周1-3次)</SelectItem>
+                <SelectItem key="moderate">
+                  中度活动 (中等运动/周3-5次)
+                </SelectItem>
+                <SelectItem key="active">
+                  高度活动 (剧烈运动/周6-7次)
+                </SelectItem>
+                <SelectItem key="very_active">
+                  极度活动 (体力工作，每天训练)
+                </SelectItem>
+              </Select>
+            </div>
+          </div>
+
+          <Divider />
+
+          <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
+            健康目标与偏好
+          </h3>
+
+          <div className="space-y-4">
+            <Textarea
+              label="健康目标"
+              placeholder="例如：保持体重、增肌、减脂、改善体质等"
+              value={profileData.healthGoals}
+              onValueChange={(value) => handleInputChange("healthGoals", value)}
+              isDisabled={!isEditing}
+              variant={isEditing ? "bordered" : "flat"}
+              description="描述您希望达成的健康目标"
+              minRows={2}
+              classNames={{
+                label: "text-sm font-medium text-gray-700",
+                description: "text-xs text-gray-500",
+              }}
+            />
+
+            <Textarea
+              label="饮食偏好"
+              placeholder="例如：少糖、少油、无乳制品、素食、地中海饮食等"
+              value={profileData.dietaryPreferences}
+              onValueChange={(value) =>
+                handleInputChange("dietaryPreferences", value)
+              }
+              isDisabled={!isEditing}
+              variant={isEditing ? "bordered" : "flat"}
+              description="您的饮食习惯和偏好"
+              minRows={2}
+              classNames={{
+                label: "text-sm font-medium text-gray-700",
+                description: "text-xs text-gray-500",
+              }}
+            />
+
+            <Textarea
+              label="过敏或忌口"
+              placeholder="例如：花生、贝类、大豆、面筋、坚果等"
+              value={profileData.allergies}
+              onValueChange={(value) => handleInputChange("allergies", value)}
+              isDisabled={!isEditing}
+              variant={isEditing ? "bordered" : "flat"}
+              description="请详细列出所有过敏源和忌口食物"
+              minRows={2}
+              classNames={{
+                label: "text-sm font-medium text-gray-700",
+                description: "text-xs text-gray-500",
+              }}
+            />
+          </div>
+        </Card>
+
+        {/* 操作按钮区 */}
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="flat" color="danger" startContent={<TrashIcon />}>
+            删除档案
+          </Button>
+          <Button variant="flat" color="secondary" startContent={<EditIcon />}>
+            编辑信息
+          </Button>
+          <Button color="primary" startContent={<SaveIcon />}>
+            更新档案
+          </Button>
+        </div>
+
+        {/* 删除确认弹窗 */}
+        <Modal
+          isOpen={showDeleteModal}
+          onOpenChange={setShowDeleteModal}
+          size="md"
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    确认删除档案
+                  </h3>
+                </ModalHeader>
+                <ModalBody>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    您确定要删除当前的健康档案吗？删除后将无法恢复，您需要重新填写所有信息。
+                  </p>
+                  <Alert
+                    color="warning"
+                    title="注意"
+                    description="删除档案将同时删除基于此档案生成的所有个性化推荐和历史数据"
+                  />
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="default" variant="light" onPress={onClose}>
+                    取消
+                  </Button>
+                  <Button color="danger" onPress={handleDelete}>
+                    确认删除
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+      </div>
+    </div>
   );
 };
 

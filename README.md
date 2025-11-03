@@ -66,3 +66,8 @@ The application follows a clean architecture with:
 ## Offline-First Design
 
 All data is stored locally with no network dependencies. The recommendation algorithm processes data locally on the user's device.
+
+## Developer Wiki
+
+For a comprehensive, developer-focused Wiki (Chinese with English technical terms when appropriate), see:
+- .qwen/project_wiki.md

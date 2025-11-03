@@ -1,18 +1,14 @@
 import React from "react";
 import { ErrorProvider } from "./lib/ErrorContext";
-import { ThemeToggle } from "./components/common";
+import { AppThemeProvider } from "./components/common/AppThemeProvider";
+import ThemeToggle from "./components/common/ThemeToggle";
 import Navigation from "./components/common/Navigation";
 import Dashboard from "./components/common/Dashboard";
 import ProfileSetup from "./components/ProfileSetup";
 import Recommendations from "./components/Recommendations";
 import History from "./components/History";
 import { useNavigation, type TabType } from "./hooks/useNavigation";
-import { 
-  Card, 
-  CardHeader, 
-  CardBody
-} from "@heroui/react";
-import { AppThemeProvider } from "./components/common/AppThemeProvider";
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/react";
 import "./styles/globals.css";
 
 function App() {
@@ -36,74 +32,93 @@ function App() {
   const getPageInfo = () => {
     switch (activeTab) {
       case "dashboard":
-        return { title: "📊 健康概览", subtitle: "查看您的健康饮食概览和统计信息" };
+        return {
+          title: "健康概览",
+          subtitle: "查看您的健康饮食概览和统计信息",
+          icon: "📊",
+        };
       case "profile":
-        return { title: "👤 健康档案", subtitle: "设置和管理您的个人健康信息" };
+        return {
+          title: "健康档案",
+          subtitle: "设置和管理您的个人健康信息",
+          icon: "👤",
+        };
       case "recommendations":
-        return { title: "🍽️ 饮食推荐", subtitle: "获取个性化的饮食推荐方案" };
+        return {
+          title: "饮食推荐",
+          subtitle: "获取个性化的饮食推荐方案",
+          icon: "🍽️",
+        };
       case "history":
-        return { title: "📋 饮食记录", subtitle: "查看和管理您的饮食历史记录" };
+        return {
+          title: "饮食记录",
+          subtitle: "查看和管理您的饮食历史记录",
+          icon: "📋",
+        };
       default:
-        return { title: "📊 健康概览", subtitle: "查看您的健康饮食概览和统计信息" };
+        return {
+          title: "健康概览",
+          subtitle: "查看您的健康饮食概览和统计信息",
+          icon: "📊",
+        };
     }
   };
 
   return (
     <AppThemeProvider>
       <ErrorProvider>
-        <div className="flex min-h-screen flex-col md:flex-row">
-          <Navigation 
-            activeTab={activeTab} 
-            onTabChange={(tab: TabType) => setActiveTab(tab)} 
+        <div className="flex min-h-screen bg-background">
+          {/* 导航侧边栏 */}
+          <Navigation
+            activeTab={activeTab}
+            onTabChange={(tab: TabType) => setActiveTab(tab)}
           />
-          
-          {/* Main content area - adjusted for sidebar */}
-          <main className="w-full md:ml-64 flex-1 pb-24 md:pb-6 pt-16 md:pt-0 bg-background-50">
-            <Card className="border-0 shadow-none rounded-none md:rounded-xl m-4 md:m-6 h-auto min-h-[calc(100vh-5rem)] md:min-h-[calc(100vh-3rem)]">
-              <CardHeader className="border-b border-divider p-4 md:p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 w-full">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <nav className="flex items-center space-x-2 text-sm">
-                        <a 
-                          href="#" 
-                          className="text-primary hover:underline"
-                          onClick={(e) => { 
-                            e.preventDefault(); 
-                            setActiveTab("dashboard"); 
-                          }}
-                        >
-                          首页
-                        </a>
-                        <span>/</span>
-                        <span className="text-foreground-600">
-                          {activeTab === "dashboard" ? "健康概览" : 
-                           activeTab === "profile" ? "健康档案" : 
-                           activeTab === "recommendations" ? "饮食推荐" : "饮食记录"}
-                        </span>
-                      </nav>
-                    </div>
-                    <h1 className="text-xl md:text-2xl font-bold text-foreground">
+
+          {/* 主内容区域 */}
+          <div className="flex-1 lg:ml-80 transition-all duration-300">
+            {/* 顶部导航栏 */}
+            <Navbar
+              className="lg:pl-0 border-b border-divider bg-background"
+              maxWidth="full"
+              height="3.5rem"
+            >
+              <NavbarBrand className="lg:hidden">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                    🥗
+                  </div>
+                  <span className="font-bold text-inherit">智能饮食助手</span>
+                </div>
+              </NavbarBrand>
+
+              {/*<NavbarContent justify="end">
+                <NavbarItem className="hidden lg:flex">
+                  <ThemeToggle />
+                </NavbarItem>
+              </NavbarContent>*/}
+            </Navbar>
+
+            {/* 页面内容 */}
+            <div className="max-w-7xl mx-auto px-6 py-6">
+              {/* 页面标题区域 */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">{getPageInfo().icon}</div>
+                  <div>
+                    <h1 className="text-xl lg:text-2xl font-bold text-foreground">
                       {getPageInfo().title}
                     </h1>
-                    <p className="text-foreground-600 mt-1 text-sm md:text-base">
+                    <p className="text-sm text-foreground-500 mt-1">
                       {getPageInfo().subtitle}
                     </p>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <ThemeToggle />
-                  </div>
                 </div>
-              </CardHeader>
-              
-              <CardBody className="p-4 md:p-6 overflow-y-auto">
-                <div className="max-w-7xl mx-auto">
-                  {renderActiveTab()}
-                </div>
-              </CardBody>
-            </Card>
-          </main>
+              </div>
+
+              {/* 页面内容区域 */}
+              <div className="pb-20 lg:pb-6">{renderActiveTab()}</div>
+            </div>
+          </div>
         </div>
       </ErrorProvider>
     </AppThemeProvider>
