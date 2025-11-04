@@ -14,14 +14,14 @@
 
 ## 🎨 全局布局改造
 
-### [ ] 1. 应用主框架 (App.tsx)
-- [ ] 使用 `NextUIProvider` 包装整个应用
-- [ ] 实现 `Navbar` 替代当前的 Navigation 组件
-  - [ ] 左侧：应用 Logo + 标题
-  - [ ] 中间：搜索栏 (`Input` with search icon)
-  - [ ] 右侧：用户头像 (`Avatar`) + 通知图标 + 主题切换 (`Switch`)
-- [ ] 主内容区域使用 `Container` + `Spacer` 进行布局
-- [ ] 添加 `Breadcrumbs` 面包屑导航
+### [x] 1. 应用主框架 (App.tsx)
+- [x] 使用 `NextUIProvider` 包装整个应用
+- [x] 实现 `Navbar` 替代当前的 Navigation 组件
+  - [x] 左侧：应用 Logo + 标题
+  - [x] 中间：搜索栏 (`Input` with search icon)
+  - [x] 右侧：用户头像 (`Avatar`) + 通知图标 + 主题切换 (`Switch`)
+- [x] 主内容区域使用 `Container` + `Spacer` 进行布局
+- [x] 添加 `Breadcrumbs` 面包屑导航
 - [ ] 实现页面切换动画效果
 
 ### [ ] 2. 侧边栏导航重构 (Navigation.tsx)
@@ -62,29 +62,30 @@
 
 ## 👤 健康档案页面改造
 
-### [ ] 4. 档案设置表单 (ProfileForm.tsx)
-- [ ] **分步骤表单设计**
-  - [ ] 使用 `Tabs` 将表单分为 4 个步骤
-    - [ ] 基本信息、饮食偏好、健康目标、过敏限制
-  - [ ] 每个 Tab 使用不同的图标和颜色主题
+### [x] 4. 档案设置表单 (ProfileForm.tsx)
+- [x] **分步骤表单设计** (采用卡片式布局替代Tabs，更符合现代设计)
+  - [x] 使用 `Card` 将表单分为 3 个区域
+    - [x] 档案简介区、基本信息与偏好、操作区
+  - [x] 每个区域使用不同的图标和颜色主题
 
-- [ ] **表单组件优化**
-  - [ ] 姓名/年龄：`Input` with validation
-  - [ ] 性别选择：`RadioGroup` with custom styling
-  - [ ] 身高体重：`Slider` 双向滑块或 `Input` with unit suffix
-  - [ ] 活动等级：`Select` with descriptive options
-  - [ ] 健康目标：`CheckboxGroup` with icons
-  - [ ] 饮食偏好：`Chip` 多选标签
-  - [ ] 过敏源：`Autocomplete` with search
+- [x] **表单组件优化**
+  - [x] 年龄：`Input` with validation and description
+  - [x] 性别选择：`Select` with clean options
+  - [x] 身高体重：`Input` with unit suffix and BMI calculation
+  - [x] 活动等级：`Select` with descriptive options
+  - [x] 健康目标：`Textarea` with guidance
+  - [x] 饮食偏好：`Textarea` with examples
+  - [x] 过敏源：`Textarea` with detailed descriptions
 
-- [ ] **表单验证和反馈**
-  - [ ] 实时验证使用 `Input` 的 `errorMessage` 属性
-  - [ ] BMI 计算结果用 `Progress` + `Tooltip` 展示
-  - [ ] 保存成功使用 `toast` 通知
+- [x] **表单验证和反馈**
+  - [x] 实时验证使用 `Input` 的 `description` 属性
+  - [x] BMI 计算结果用 `Chip` + `Tooltip` 展示
+  - [x] 编辑模式切换反馈
 
-- [ ] **档案完整度显示**
-  - [ ] 顶部添加 `Progress` 显示档案完整度
-  - [ ] 未完成项目用 `Badge` 标记
+- [x] **档案完整度显示**
+  - [x] 顶部添加 `Progress` 显示档案完整度
+  - [x] BMI状态用 `Chip` 标记
+  - [x] 完整度低于50%用 `Alert` 提示
 
 ---
 

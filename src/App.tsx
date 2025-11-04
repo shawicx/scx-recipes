@@ -1,15 +1,24 @@
 import React from "react";
+import { Layout, Menu, Breadcrumb, Avatar, Dropdown } from "antd";
+import { 
+  DashboardOutlined, 
+  UserOutlined, 
+  BulbOutlined, 
+  HistoryOutlined,
+  SettingOutlined,
+  LogoutOutlined
+} from "@ant-design/icons";
 import { ErrorProvider } from "./lib/ErrorContext";
 import { AppThemeProvider } from "./components/common/AppThemeProvider";
-import ThemeToggle from "./components/common/ThemeToggle";
 import Navigation from "./components/common/Navigation";
 import Dashboard from "./components/common/Dashboard";
 import ProfileSetup from "./components/ProfileSetup";
 import Recommendations from "./components/Recommendations";
 import History from "./components/History";
 import { useNavigation, type TabType } from "./hooks/useNavigation";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/react";
 import "./styles/globals.css";
+
+const { Header, Sider, Content } = Layout;
 
 function App() {
   const { activeTab, setActiveTab } = useNavigation();
@@ -32,94 +41,125 @@ function App() {
   const getPageInfo = () => {
     switch (activeTab) {
       case "dashboard":
-        return {
-          title: "健康概览",
-          subtitle: "查看您的健康饮食概览和统计信息",
-          icon: "📊",
+        return { 
+          title: "健康概览", 
+          subtitle: "查看您的健康饮食概览和统计信息"
         };
       case "profile":
-        return {
-          title: "健康档案",
-          subtitle: "设置和管理您的个人健康信息",
-          icon: "👤",
+        return { 
+          title: "健康档案", 
+          subtitle: "设置和管理您的个人健康信息"
         };
       case "recommendations":
-        return {
-          title: "饮食推荐",
-          subtitle: "获取个性化的饮食推荐方案",
-          icon: "🍽️",
+        return { 
+          title: "饮食推荐", 
+          subtitle: "获取个性化的饮食推荐方案"
         };
       case "history":
-        return {
-          title: "饮食记录",
-          subtitle: "查看和管理您的饮食历史记录",
-          icon: "📋",
+        return { 
+          title: "饮食记录", 
+          subtitle: "查看和管理您的饮食历史记录"
         };
       default:
-        return {
-          title: "健康概览",
-          subtitle: "查看您的健康饮食概览和统计信息",
-          icon: "📊",
+        return { 
+          title: "健康概览", 
+          subtitle: "查看您的健康饮食概览和统计信息"
         };
     }
   };
 
+  const getBreadcrumbItems = () => {
+    const items = [
+      { title: "首页" }
+    ];
+    
+    const pageInfo = getPageInfo();
+    items.push({ title: pageInfo.title });
+    
+    return items;
+  };
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人资料',
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: '设置',
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      danger: true,
+    },
+  ];
+
   return (
     <AppThemeProvider>
       <ErrorProvider>
-        <div className="flex min-h-screen bg-background">
-          {/* 导航侧边栏 */}
-          <Navigation
-            activeTab={activeTab}
-            onTabChange={(tab: TabType) => setActiveTab(tab)}
+        <Layout className="min-h-screen">
+          {/* 左侧导航 */}
+          <Navigation 
+            activeTab={activeTab} 
+            onTabChange={(tab: TabType) => setActiveTab(tab)} 
           />
-
-          {/* 主内容区域 */}
-          <div className="flex-1 lg:ml-80 transition-all duration-300">
+          
+          {/* 主要内容区域 */}
+          <Layout className="lg:ml-64">
             {/* 顶部导航栏 */}
-            <Navbar
-              className="lg:pl-0 border-b border-divider bg-background"
-              maxWidth="full"
-              height="3.5rem"
-            >
-              <NavbarBrand className="lg:hidden">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                    🥗
-                  </div>
-                  <span className="font-bold text-inherit">智能饮食助手</span>
-                </div>
-              </NavbarBrand>
-
-              {/*<NavbarContent justify="end">
-                <NavbarItem className="hidden lg:flex">
-                  <ThemeToggle />
-                </NavbarItem>
-              </NavbarContent>*/}
-            </Navbar>
+            <Header className="bg-white border-b border-gray-200 px-6 flex items-center justify-between">
+              <div className="lg:hidden">
+                <h1 className="text-lg font-semibold">智能饮食助手</h1>
+              </div>
+              
+              <div className="flex-1"></div>
+              
+              <div className="flex items-center gap-4">
+                <Dropdown 
+                  menu={{ items: userMenuItems }}
+                  placement="bottomRight"
+                >
+                  <Avatar 
+                    size="default" 
+                    icon={<UserOutlined />} 
+                    className="cursor-pointer bg-emerald-500"
+                  />
+                </Dropdown>
+              </div>
+            </Header>
 
             {/* 页面内容 */}
-            <div className="max-w-7xl mx-auto px-6 py-6">
+            <Content className="p-6">
+              {/* 面包屑导航 */}
+              <Breadcrumb 
+                items={getBreadcrumbItems()}
+                className="mb-6"
+              />
+
               {/* 页面标题区域 */}
               <div className="mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl">{getPageInfo().icon}</div>
-                  <div>
-                    <h1 className="text-xl lg:text-2xl font-bold text-foreground">
-                      {getPageInfo().title}
-                    </h1>
-                    <p className="text-sm text-foreground-500 mt-1">
-                      {getPageInfo().subtitle}
-                    </p>
-                  </div>
-                </div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                  {getPageInfo().title}
+                </h1>
+                <p className="text-gray-600">
+                  {getPageInfo().subtitle}
+                </p>
               </div>
 
               {/* 页面内容区域 */}
-              <div className="pb-20 lg:pb-6">{renderActiveTab()}</div>
-            </div>
-          </div>
-        </div>
+              <div className="pb-6">
+                {renderActiveTab()}
+              </div>
+            </Content>
+          </Layout>
+        </Layout>
       </ErrorProvider>
     </AppThemeProvider>
   );
