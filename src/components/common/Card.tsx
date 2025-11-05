@@ -1,5 +1,6 @@
 import React from "react";
-import { Card as HeroUICard, CardFooter, Button } from "@heroui/react";
+import { Card as AntCard } from "antd";
+import Button from "./Button";
 
 interface CardProps {
   title?: string;
@@ -7,10 +8,11 @@ interface CardProps {
   icon?: string;
   children: React.ReactNode;
   className?: string;
-  actions?: React.ReactNode;
+  actions?: React.ReactNode[];
   loading?: boolean;
   error?: string;
   variant?: "default" | "highlight" | "success" | "warning" | "error";
+  [key: string]: any; // Allow other props
 }
 
 const Card: React.FC<CardProps> = ({
@@ -23,29 +25,30 @@ const Card: React.FC<CardProps> = ({
   loading = false,
   error,
   variant = "default",
+  ...props
 }) => {
   const variantClass = variant === "highlight" ? "border-primary" : 
                      variant === "success" ? "border-success" : 
                      variant === "warning" ? "border-warning" : 
                      variant === "error" ? "border-danger" : "border-default";
+  
+  const cardTitle = (title || subtitle || icon || actions) ? (
+    <div className="flex items-start gap-3 flex-1">
+      {icon && <span className="text-xl pt-1">{icon}</span>}
+      <div className="flex-1">
+        {title && <h3 className="text-xl font-semibold text-foreground">{title}</h3>}
+        {subtitle && <p className="text-sm text-foreground-500">{subtitle}</p>}
+      </div>
+      {actions && <div>{actions}</div>}
+    </div>
+  ) : undefined;
 
   return (
-    <HeroUICard 
+    <AntCard 
+      title={cardTitle}
       className={`${className} ${variantClass}`}
+      {...props}
     >
-      {(title || subtitle || icon || actions) && (
-        <div className="flex items-start p-4 pb-2 border-b border-divider">
-          <div className="flex items-start gap-3 flex-1">
-            {icon && <span className="text-xl pt-1">{icon}</span>}
-            <div className="flex-1">
-              {title && <h3 className="text-xl font-semibold text-foreground">{title}</h3>}
-              {subtitle && <p className="text-sm text-foreground-500">{subtitle}</p>}
-            </div>
-            {actions && <CardFooter className="p-0">{actions}</CardFooter>}
-          </div>
-        </div>
-      )}
-
       <div className="p-6 pt-4">
         {loading && (
           <div className="flex flex-col items-center justify-center py-8">
@@ -63,7 +66,7 @@ const Card: React.FC<CardProps> = ({
 
         {!loading && !error && children}
       </div>
-    </HeroUICard>
+    </AntCard>
   );
 };
 
@@ -79,7 +82,7 @@ export const StatsCard: React.FC<{
                     changeType === "negative" ? "text-danger" : "text-foreground-500";
 
   return (
-    <HeroUICard className="p-4">
+    <div className="p-4">
       <div className="flex items-center gap-4">
         <div className="text-3xl p-3 bg-primary/10 rounded-lg">
           {icon}
@@ -97,7 +100,7 @@ export const StatsCard: React.FC<{
           )}
         </div>
       </div>
-    </HeroUICard>
+    </div>
   );
 };
 
@@ -110,7 +113,7 @@ export const ActionCard: React.FC<{
   disabled?: boolean;
 }> = ({ title, description, icon, action, actionLabel, disabled = false }) => {
   return (
-    <HeroUICard className="text-center">
+    <div className="text-center">
       <div className="p-6">
         <div className="text-4xl mb-4">{icon}</div>
         <h4 className="text-lg font-semibold mb-2">{title}</h4>
@@ -123,7 +126,7 @@ export const ActionCard: React.FC<{
           {actionLabel}
         </Button>
       </div>
-    </HeroUICard>
+    </div>
   );
 };
 

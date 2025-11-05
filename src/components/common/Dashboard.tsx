@@ -1,26 +1,16 @@
 import React, { useState } from "react";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Progress,
-  CircularProgress,
-  Chip,
-  Button,
-  ButtonGroup,
-  Accordion,
-  AccordionItem,
-  Avatar,
+import { 
+  Card, 
+  Progress, 
+  Button, 
+  Avatar, 
   Tooltip,
   Badge,
-  Image,
   Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure
-} from "@heroui/react";
+  Divider,
+  Space
+} from "antd";
+import { CheckCircleOutlined, MinusCircleOutlined, ClockCircleOutlined, HeartOutlined, BarChartOutlined, UserOutlined } from '@ant-design/icons';
 
 // 现代化图标组件
 const FlameIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -63,7 +53,7 @@ const ClockIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 
 const Dashboard: React.FC = () => {
   const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // 模拟数据
   const todayStats = {
@@ -166,48 +156,50 @@ const Dashboard: React.FC = () => {
     subtitle, 
     icon, 
     trend, 
-    color = "emerald", 
-    children 
+    color = "emerald" 
   }: any) => (
-    <Card 
-      shadow="sm" 
-      radius="lg" 
-      className="p-6 hover:shadow-md transition-all duration-300 hover:bg-emerald-50/30 bg-white"
-    >
-      <CardBody className="p-0">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl bg-${color}-100 text-${color}-600`}>
-              {icon}
-            </div>
-            {trend && (
-              <Badge 
-                color={trend > 0 ? "success" : "warning"} 
-                variant="flat" 
-                size="sm"
-                className="text-xs"
-              >
-                {trend > 0 ? "↗" : "↘"} {Math.abs(trend)}%
-              </Badge>
-            )}
+    <Card className="p-6 hover:shadow-md transition-all duration-300 hover:bg-emerald-50/30 bg-white">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-xl bg-${color}-100 text-${color}-600`}>
+            {icon}
           </div>
+          {trend && (
+            <Badge 
+              color={trend > 0 ? "success" : "warning"} 
+              className="text-xs"
+            >
+              {trend > 0 ? "↗" : "↘"} {Math.abs(trend)}%
+            </Badge>
+          )}
         </div>
-        
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-          {title}
-        </h3>
-        
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-2xl font-semibold text-gray-800">{value}</span>
-          {unit && <span className="text-sm text-gray-500">{unit}</span>}
-        </div>
-        
-        {subtitle && (
-          <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
-        )}
-        
-        {children}
-      </CardBody>
+      </div>
+      
+      <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+        {title}
+      </h3>
+      
+      <div className="flex items-baseline gap-2 mb-1">
+        <span className="text-2xl font-semibold text-gray-800">{value}</span>
+        {unit && <span className="text-sm text-gray-500">{unit}</span>}
+      </div>
+      
+      {subtitle && (
+        <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
+      )}
+      
+      <Space className="w-full">
+        <Progress 
+          percent={todayStats.calories.percentage} 
+          size="small"
+          className="mb-2"
+          status={trend > 0 ? "success" : "active"}
+        />
+      </Space>
+      <div className="flex justify-between text-xs text-gray-500">
+        <span>剩余 {todayStats.calories.target - todayStats.calories.current}卡</span>
+        <span>{todayStats.calories.percentage}%</span>
+      </div>
     </Card>
   );
 
@@ -225,10 +217,8 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center gap-3">
             <span className="text-xs text-gray-400 font-medium">{meal.time}</span>
             <Badge 
-              size="sm" 
-              variant="flat" 
-              color={meal.status === 'completed' ? 'success' : 'default'}
               className="text-xs"
+              color={meal.status === 'completed' ? 'success' : 'default'}
             >
               {meal.type}
             </Badge>
@@ -237,9 +227,9 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-1">
           {meal.items.map((item, index) => (
-            <Chip key={index} size="sm" variant="bordered" className="text-xs h-5 text-gray-600">
+            <Badge key={index} color="processing" className="text-xs h-5 text-gray-600">
               {item}
-            </Chip>
+            </Badge>
           ))}
         </div>
       </div>
@@ -248,7 +238,11 @@ const Dashboard: React.FC = () => {
 
   const handleRecommendationClick = (rec: any) => {
     setSelectedRecommendation(rec);
-    onOpen();
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -271,166 +265,200 @@ const Dashboard: React.FC = () => {
                 icon={<FlameIcon className="text-emerald-600" />}
                 color="emerald"
                 trend={todayStats.trends.calories}
-              >
-                <Progress 
-                  value={todayStats.calories.percentage} 
-                  color="success"
-                  size="sm"
-                  className="mb-2"
-                />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>剩余 {todayStats.calories.target - todayStats.calories.current}卡</span>
-                  <span>{todayStats.calories.percentage}%</span>
-                </div>
-              </StatCard>
+              />
 
-              <StatCard
-                title="营养均衡度"
-                value={todayStats.nutrition.average}
-                unit="%"
-                subtitle="蛋白质·碳水·脂肪"
-                icon={<ActivityIcon className="text-sky-500" />}
-                color="sky"
-                trend={todayStats.trends.nutrition}
-              >
+              <Card className="p-6 hover:shadow-md transition-all duration-300 hover:bg-sky-50/30 bg-white">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-sky-100 text-sky-600">
+                      <ActivityIcon />
+                    </div>
+                    <Badge 
+                      color="success" 
+                      className="text-xs"
+                    >
+                      ↗ 5%
+                    </Badge>
+                  </div>
+                </div>
+                
+                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                  营养均衡度
+                </h3>
+                
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-2xl font-semibold text-gray-800">{todayStats.nutrition.average}</span>
+                  <span className="text-sm text-gray-500">%</span>
+                </div>
+                
+                <p className="text-xs text-gray-500 mb-3">蛋白质·碳水·脂肪</p>
+                
                 <div className="space-y-2">
-                  <Progress 
-                    value={todayStats.nutrition.protein} 
-                    color="success" 
-                    size="sm"
-                    label="蛋白质"
-                    className="text-xs"
-                  />
-                  <Progress 
-                    value={todayStats.nutrition.carbs} 
-                    color="warning" 
-                    size="sm"
-                    label="碳水化合物"
-                    className="text-xs"
-                  />
-                  <Progress 
-                    value={todayStats.nutrition.fat} 
-                    color="primary" 
-                    size="sm"
-                    label="脂肪"
-                    className="text-xs"
-                  />
+                  <Space className="w-full">
+                    <Progress 
+                      percent={todayStats.nutrition.protein} 
+                      size="small"
+                      status="success"
+                    />
+                  </Space>
+                  <Space className="w-full">
+                    <Progress 
+                      percent={todayStats.nutrition.carbs} 
+                      size="small"
+                      status="active"
+                    />
+                  </Space>
+                  <Space className="w-full">
+                    <Progress 
+                      percent={todayStats.nutrition.fat} 
+                      size="small"
+                      status="success"
+                    />
+                  </Space>
                 </div>
-              </StatCard>
+              </Card>
 
-              <StatCard
-                title="连续打卡天数"
-                value={todayStats.streak}
-                unit="天"
-                subtitle="保持良好习惯"
-                icon={<TrendingUpIcon className="text-amber-500" />}
-                color="amber"
-                trend={todayStats.trends.streak}
-              >
-                <Badge color="warning" variant="flat" size="sm" className="mt-2">
+              <Card className="p-6 hover:shadow-md transition-all duration-300 hover:bg-amber-50/30 bg-white">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
+                      <TrendingUpIcon />
+                    </div>
+                    <Badge 
+                      color="success" 
+                      className="text-xs"
+                    >
+                      ↗ 8%
+                    </Badge>
+                  </div>
+                </div>
+                
+                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                  连续打卡天数
+                </h3>
+                
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-2xl font-semibold text-gray-800">{todayStats.streak}</span>
+                  <span className="text-sm text-gray-500">天</span>
+                </div>
+                
+                <p className="text-xs text-gray-500 mb-3">保持良好习惯</p>
+                
+                <Badge color="warning" className="mt-2">
                   🔥 连续记录中
                 </Badge>
-              </StatCard>
+              </Card>
 
-              <StatCard
-                title="健康评分"
-                value={todayStats.healthScore}
-                unit="分"
-                subtitle="综合健康指数"
-                icon={<HeartIcon className="text-rose-500" />}
-                color="rose"
-                trend={todayStats.trends.health}
-              >
-                <Tooltip content="基于饮食均衡、运动量、睡眠质量综合评估">
+              <Card className="p-6 hover:shadow-md transition-all duration-300 hover:bg-rose-50/30 bg-white">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-rose-100 text-rose-600">
+                      <HeartIcon />
+                    </div>
+                    <Badge 
+                      color="success" 
+                      className="text-xs"
+                    >
+                      ↗ 3%
+                    </Badge>
+                  </div>
+                </div>
+                
+                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                  健康评分
+                </h3>
+                
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-2xl font-semibold text-gray-800">{todayStats.healthScore}</span>
+                  <span className="text-sm text-gray-500">分</span>
+                </div>
+                
+                <p className="text-xs text-gray-500 mb-3">综合健康指数</p>
+                
+                <Tooltip title="基于饮食均衡、运动量、睡眠质量综合评估">
                   <div className="flex justify-center mt-2">
-                    <CircularProgress
-                      value={todayStats.healthScore}
-                      color={todayStats.healthScore >= 80 ? "success" : todayStats.healthScore >= 60 ? "warning" : "danger"}
-                      showValueLabel
-                      size="md"
-                      className="cursor-help"
-                    />
+                    <div className="cursor-help">
+                      <div className="relative">
+                        <div className="text-2xl font-bold text-gray-800">
+                          {todayStats.healthScore}
+                          <span className="text-sm absolute top-0 right-0 text-gray-500">/100</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </Tooltip>
-              </StatCard>
+              </Card>
             </div>
 
             {/* 今日饮食计划 */}
-            <Card shadow="sm" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-              <CardHeader className="flex items-center justify-between pb-3">
+            <Card className="bg-white hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between pb-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
                     <ClockIcon />
                   </div>
                   <h3 className="text-lg font-medium text-gray-800">今日饮食计划</h3>
                 </div>
-                <Badge color="primary" variant="flat" size="sm">
+                <Badge color="primary">
                   {todayMeals.filter(m => m.status === 'completed').length}/{todayMeals.length} 完成
                 </Badge>
-              </CardHeader>
-              <CardBody className="pt-0">
-                <div className="space-y-0">
-                  {todayMeals.map((meal, index) => (
-                    <TimelineItem 
-                      key={meal.id} 
-                      meal={meal} 
-                      isLast={index === todayMeals.length - 1}
-                    />
-                  ))}
-                </div>
-              </CardBody>
+              </div>
+              <Divider className="pt-0"/>
+              <div className="space-y-0">
+                {todayMeals.map((meal, index) => (
+                  <TimelineItem 
+                    key={meal.id} 
+                    meal={meal} 
+                    isLast={index === todayMeals.length - 1}
+                  />
+                ))}
+              </div>
             </Card>
 
             {/* 营养摄入详细分析 */}
-            <Card shadow="sm" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-sky-100 text-sky-600">
-                    <ActivityIcon />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-800">营养摄入分析</h3>
+            <Card className="bg-white hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 pb-3">
+                <div className="p-2 rounded-xl bg-sky-100 text-sky-600">
+                  <ActivityIcon />
                 </div>
-              </CardHeader>
-              <CardBody>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="text-center">
-                    <CircularProgress
-                      value={todayStats.nutrition.protein}
-                      color="success"
-                      showValueLabel
-                      className="mb-4"
-                      size="lg"
-                    />
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">蛋白质</h4>
-                    <p className="text-xs text-gray-500 mb-1">65g / 100g</p>
-                    <Badge color="success" variant="flat" size="sm">达标</Badge>
+                <h3 className="text-lg font-medium text-gray-800">营养摄入分析</h3>
+              </div>
+              <Divider className="pt-0"/>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-gray-800 mb-2">{todayStats.nutrition.protein}</div>
+                    <div className="h-2 bg-gray-200 rounded-full mt-2">
+                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${todayStats.nutrition.protein}%` }}></div>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <CircularProgress
-                      value={todayStats.nutrition.carbs}
-                      color="warning"
-                      showValueLabel
-                      className="mb-4"
-                      size="lg"
-                    />
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">碳水化合物</h4>
-                    <p className="text-xs text-gray-500 mb-1">180g / 400g</p>
-                    <Badge color="warning" variant="flat" size="sm">偏低</Badge>
-                  </div>
-                  <div className="text-center">
-                    <CircularProgress
-                      value={todayStats.nutrition.fat}
-                      color="primary"
-                      showValueLabel
-                      className="mb-4"
-                      size="lg"
-                    />
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">脂肪</h4>
-                    <p className="text-xs text-gray-500 mb-1">42g / 60g</p>
-                    <Badge color="success" variant="flat" size="sm">良好</Badge>
-                  </div>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-1">蛋白质</h4>
+                  <p className="text-xs text-gray-500 mb-1">65g / 100g</p>
+                  <Badge color="success">达标</Badge>
                 </div>
-              </CardBody>
+                <div className="text-center">
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-gray-800 mb-2">{todayStats.nutrition.carbs}</div>
+                    <div className="h-2 bg-gray-200 rounded-full mt-2">
+                      <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${todayStats.nutrition.carbs}%` }}></div>
+                    </div>
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-1">碳水化合物</h4>
+                  <p className="text-xs text-gray-500 mb-1">180g / 400g</p>
+                  <Badge color="warning">偏低</Badge>
+                </div>
+                <div className="text-center">
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-gray-800 mb-2">{todayStats.nutrition.fat}</div>
+                    <div className="h-2 bg-gray-200 rounded-full mt-2">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${todayStats.nutrition.fat}%` }}></div>
+                    </div>
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-1">脂肪</h4>
+                  <p className="text-xs text-gray-500 mb-1">42g / 60g</p>
+                  <Badge color="success">良好</Badge>
+                </div>
+              </div>
             </Card>
           </div>
 
@@ -438,222 +466,196 @@ const Dashboard: React.FC = () => {
           <div className="col-span-12 lg:col-span-4 space-y-6">
             
             {/* 水分摄入跟踪 */}
-            <Card shadow="sm" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-sky-100 text-sky-600">
-                      <DropletIcon />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-800">水分摄入</h3>
-                      <p className="text-xs text-gray-500">今日目标 {todayStats.water.target} 杯</p>
-                    </div>
+            <Card className="bg-white hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between w-full pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-sky-100 text-sky-600">
+                    <DropletIcon />
                   </div>
-                  <Badge color="primary" variant="flat" size="sm">
-                    {todayStats.water.current}/{todayStats.water.target}
-                  </Badge>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-800">水分摄入</h3>
+                    <p className="text-xs text-gray-500">今日目标 {todayStats.water.target} 杯</p>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardBody className="pt-0">
+                <Badge color="primary">
+                  {todayStats.water.current}/{todayStats.water.target}
+                </Badge>
+              </div>
+              <Divider className="pt-0"/>
+              <Space className="w-full">
                 <Progress 
-                  value={(todayStats.water.current / todayStats.water.target) * 100} 
-                  color="primary"
-                  size="sm"
+                  percent={(todayStats.water.current / todayStats.water.target) * 100} 
+                  size="small"
                   className="mb-4"
+                  status="active"
                 />
-                <ButtonGroup className="w-full">
-                  <Button size="sm" variant="flat" color="primary" className="flex-1">
-                    +1 杯
-                  </Button>
-                  <Button size="sm" variant="flat" color="primary" className="flex-1">
-                    +500ml
-                  </Button>
-                </ButtonGroup>
-              </CardBody>
+              </Space>
+              <div className="flex gap-2">
+                <Button size="small" type="default" className="flex-1">
+                  +1 杯
+                </Button>
+                <Button size="small" type="default" className="flex-1">
+                  +500ml
+                </Button>
+              </div>
             </Card>
 
             {/* 智能推荐 */}
-            <Card shadow="sm" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-800">智能推荐</h3>
+            <Card className="bg-white hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 pb-3">
+                <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                  </svg>
                 </div>
-              </CardHeader>
-              <CardBody className="space-y-3">
+                <h3 className="text-lg font-medium text-gray-800">智能推荐</h3>
+              </div>
+              <Divider className="pt-0"/>
+              <div className="space-y-3">
                 {quickRecommendations.map((rec) => (
                   <Card
                     key={rec.id}
-                    isPressable
-                    onPress={() => handleRecommendationClick(rec)}
-                    className="hover:border-emerald-200 transition-colors border border-gray-100"
-                    shadow="none"
+                    onClick={() => handleRecommendationClick(rec)}
+                    className="hover:border-emerald-200 transition-colors border border-gray-100 cursor-pointer"
                   >
-                    <CardBody className="p-4">
-                      <div className="flex items-start gap-3">
-                        <Avatar
-                          src={rec.image}
-                          alt={rec.title}
-                          size="md"
-                          className="flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-medium text-gray-800 text-sm">{rec.title}</h4>
-                            <span className="text-sm text-gray-400 ml-2">{rec.calories}</span>
-                          </div>
-                          <p className="text-sm text-gray-500 mb-2">{rec.description}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-400">⏱️ {rec.cookTime}</span>
-                            <div className="flex gap-1">
-                              {rec.tags.slice(0, 2).map((tag, index) => (
-                                <Badge key={index} variant="flat" color="primary" size="sm" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
+                    <div className="flex items-start gap-3">
+                      <Avatar
+                        src={rec.image}
+                        alt={rec.title}
+                        size="large"
+                        className="flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium text-gray-800 text-sm">{rec.title}</h4>
+                          <span className="text-sm text-gray-400 ml-2">{rec.calories}</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-2">{rec.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-400">⏱️ {rec.cookTime}</span>
+                          <div className="flex gap-1">
+                            {rec.tags.slice(0, 2).map((tag, index) => (
+                              <Badge key={index} color="processing" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
                           </div>
                         </div>
                       </div>
-                    </CardBody>
+                    </div>
                   </Card>
                 ))}
-              </CardBody>
+              </div>
             </Card>
 
             {/* 健康小贴士 */}
-            <Card shadow="sm" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path d="M9,12l2,2 4,-4"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-800">健康小贴士</h3>
+            <Card className="bg-white hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 pb-3">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9,12l2,2 4,-4"/>
+                  </svg>
                 </div>
-              </CardHeader>
-              <CardBody className="p-0">
-                <Accordion variant="light" className="px-0">
-                  {healthTips.map((tip, index) => (
-                    <AccordionItem
-                      key={index}
-                      title={
-                        <span className="text-sm font-semibold text-gray-600">{tip.title}</span>
-                      }
-                      className="px-6"
-                    >
-                      <div className="pb-4">
-                        <p className="text-sm text-gray-600 leading-relaxed">{tip.content}</p>
-                      </div>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardBody>
+                <h3 className="text-lg font-medium text-gray-800">健康小贴士</h3>
+              </div>
+              <Divider className="pt-0"/>
+              <div className="p-0">
+                {healthTips.map((tip, index) => (
+                  <div key={index} className="px-6 py-4 border-b border-gray-100 last:border-b-0">
+                    <h3 className="text-sm font-semibold text-gray-600 mb-2">{tip.title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{tip.content}</p>
+                  </div>
+                ))}
+              </div>
             </Card>
           </div>
         </div>
 
         {/* 底部快速记录 */}
-        <Card shadow="sm" radius="lg" className="bg-white hover:shadow-md transition-shadow mt-6">
-          <CardBody className="p-6">
+        <Card className="bg-white hover:shadow-md transition-shadow mt-6">
+          <div className="p-6">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-medium text-gray-800 mb-1">快速记录</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">选择常用食物类型快速记录饮食摄入</p>
               </div>
-              <div className="flex gap-3">
-                <Button variant="flat" color="primary" size="sm">🍎 水果</Button>
-                <Button variant="flat" color="secondary" size="sm">🥗 沙拉</Button>
-                <Button variant="flat" color="success" size="sm">🍗 蛋白质</Button>
-                <Button variant="flat" color="warning" size="sm">🥛 饮品</Button>
-                <Button color="primary" size="sm" className="ml-2">📷 扫一扫</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="default" size="small">🍎 水果</Button>
+                <Button type="default" size="small">🥗 沙拉</Button>
+                <Button type="default" size="small">🍗 蛋白质</Button>
+                <Button type="default" size="small">🥛 饮品</Button>
+                <Button type="primary" size="small" className="ml-2">📷 扫一扫</Button>
               </div>
             </div>
-          </CardBody>
+          </div>
         </Card>
 
         {/* 推荐详情弹窗 */}
         <Modal 
-          isOpen={isOpen} 
-          onOpenChange={onOpenChange}
-          size="md"
+          open={isModalOpen} 
+          onCancel={handleModalClose}
+          footer={[
+            <Button key="back" onClick={handleModalClose}>
+              关闭
+            </Button>,
+            <Button key="submit" type="primary" onClick={handleModalClose}>
+              添加到计划
+            </Button>,
+          ]}
           className="mx-4"
         >
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader className="flex flex-col gap-1">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={selectedRecommendation?.image}
-                      alt={selectedRecommendation?.title}
-                      size="lg"
-                    />
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{selectedRecommendation?.title}</h3>
-                      <p className="text-sm text-gray-500">{selectedRecommendation?.description}</p>
-                    </div>
-                  </div>
-                </ModalHeader>
-                <ModalBody>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Badge color="success" variant="flat">
-                        {selectedRecommendation?.calories}
-                      </Badge>
-                      <Badge variant="bordered">
-                        ⏱️ {selectedRecommendation?.cookTime}
-                      </Badge>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">营养成分</h4>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-500">蛋白质</p>
-                          <p className="text-sm font-semibold text-gray-800">{selectedRecommendation?.nutrition?.protein}</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-500">碳水化合物</p>
-                          <p className="text-sm font-semibold text-gray-800">{selectedRecommendation?.nutrition?.carbs}</p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-500">脂肪</p>
-                          <p className="text-sm font-semibold text-gray-800">{selectedRecommendation?.nutrition?.fat}</p>
-                        </div>
-                      </div>
-                    </div>
+          <div className="flex items-center gap-3 mb-3">
+            <Avatar
+              src={selectedRecommendation?.image}
+              alt={selectedRecommendation?.title}
+              size="large"
+            />
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">{selectedRecommendation?.title}</h3>
+              <p className="text-sm text-gray-500">{selectedRecommendation?.description}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Badge color="success">
+                {selectedRecommendation?.calories}
+              </Badge>
+              <Badge>
+                ⏱️ {selectedRecommendation?.cookTime}
+              </Badge>
+            </div>
+            
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">营养成分</h4>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">蛋白质</p>
+                  <p className="text-sm font-semibold text-gray-800">{selectedRecommendation?.nutrition?.protein}</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">碳水化合物</p>
+                  <p className="text-sm font-semibold text-gray-800">{selectedRecommendation?.nutrition?.carbs}</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">脂肪</p>
+                  <p className="text-sm font-semibold text-gray-800">{selectedRecommendation?.nutrition?.fat}</p>
+                </div>
+              </div>
+            </div>
 
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">特色标签</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedRecommendation?.tags?.map((tag: string, index: number) => (
-                          <Badge key={index} variant="flat" color="primary">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </ModalBody>
-                <ModalFooter>
-                  <Button color="danger" variant="light" onPress={onClose}>
-                    关闭
-                  </Button>
-                  <Button color="primary" onPress={onClose}>
-                    添加到计划
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContent>
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">特色标签</h4>
+              <div className="flex flex-wrap gap-2">
+                {selectedRecommendation?.tags?.map((tag: string, index: number) => (
+                  <Badge key={index} color="processing">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
         </Modal>
       </div>
     </div>

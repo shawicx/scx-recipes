@@ -1,8 +1,8 @@
 import React from "react";
-import { Button } from "@heroui/react";
-import "./Alert.css";
+import { Alert as AntAlert, type AlertProps as AntAlertProps } from "antd";
+import Button from "./Button";
 
-export interface AlertProps {
+export interface AlertProps extends AntAlertProps {
   type?: "info" | "success" | "warning" | "error";
   message: string;
   onClose?: () => void;
@@ -14,31 +14,17 @@ const Alert: React.FC<AlertProps> = ({
   message,
   onClose,
   showIcon = false,
+  ...props
 }) => {
-  const typeToIcon = {
-    info: "ℹ️",
-    success: "✓",
-    warning: "⚠️",
-    error: "❌",
-  };
-
   return (
-    <div className={`alert alert--${type}`}>
-      {showIcon && <span className="alert__icon">{typeToIcon[type]}</span>}
-      <span className="alert__message">{message}</span>
-      {onClose && (
-        <Button
-          isIconOnly
-          size="sm"
-          variant="light"
-          onPress={onClose}
-          aria-label="关闭提示"
-          className="alert__close-btn"
-        >
-          &times;
-        </Button>
-      )}
-    </div>
+    <AntAlert
+      message={message}
+      type={type}
+      showIcon={showIcon}
+      closable={!!onClose}
+      onClose={onClose}
+      {...props}
+    />
   );
 };
 

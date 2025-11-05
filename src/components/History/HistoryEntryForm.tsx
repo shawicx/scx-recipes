@@ -2,19 +2,17 @@ import React, { useState } from "react";
 import {
   Input,
   Select,
-  SelectItem,
   Button,
-  Textarea,
+  Input as AntInput,
   Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
   Checkbox,
-  Divider,
-} from "@heroui/react";
+  Form
+} from "antd";
 import { DietEntry } from "../../lib/types";
 import { logDietEntry, updateDietEntry } from "../../lib/api";
 import { useErrorDispatch } from "../../lib/ErrorContext";
+
+const { TextArea } = AntInput;
 
 interface HistoryEntryFormProps {
   onEntryAdded?: () => void; // Callback when an entry is added
@@ -148,8 +146,8 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({
             value={dietItemId}
             onChange={(e) => setDietItemId(e.target.value)}
             placeholder="输入饮食项目ID（例如，来自推荐）"
-            isDisabled={!!existingEntry} // Don't allow changing ID when editing
-            isRequired
+            disabled={!!existingEntry} // Don't allow changing ID when editing
+            required
           />
           {errors.dietItemId && (
             <div className="text-danger text-sm">{errors.dietItemId}</div>
@@ -168,7 +166,7 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({
             id="dateAttempted"
             value={dateAttempted}
             onChange={(e) => setDateAttempted(e.target.value)}
-            isRequired
+            required
           />
           {errors.dateAttempted && (
             <div className="text-danger text-sm">{errors.dateAttempted}</div>
@@ -176,23 +174,26 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({
         </div>
 
         <div className="form-group space-y-2">
-          <Select
-            label="餐点类型"
-            placeholder="选择餐点类型"
-            selectedKeys={[mealType]}
-            onSelectionChange={(keys) => {
-              const selectedKey = Array.from(keys)[0] as string;
-              setMealType(
-                selectedKey as "breakfast" | "lunch" | "dinner" | "snack",
-              );
-            }}
-            isRequired
+          <label
+            htmlFor="mealType"
+            className="block text-sm font-medium text-foreground"
           >
-            <SelectItem key="breakfast">早餐</SelectItem>
-            <SelectItem key="lunch">午餐</SelectItem>
-            <SelectItem key="dinner">晚餐</SelectItem>
-            <SelectItem key="snack">零食</SelectItem>
-          </Select>
+            餐点类型:
+          </label>
+          <Select
+            id="mealType"
+            value={mealType}
+            onChange={(value) => {
+              setMealType(value as "breakfast" | "lunch" | "dinner" | "snack");
+            }}
+            options={[
+              { value: "breakfast", label: "早餐" },
+              { value: "lunch", label: "午餐" },
+              { value: "dinner", label: "晚餐" },
+              { value: "snack", label: "零食" },
+            ]}
+            style={{ width: "100%" }}
+          />
         </div>
 
         <div className="form-group space-y-2">
@@ -203,20 +204,18 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({
             {[1, 2, 3, 4, 5].map((star) => (
               <Button
                 key={star}
-                isIconOnly
-                variant="light"
+                type="text"
                 className={`text-xl ${star <= rating ? "text-warning" : "text-default-300"}`}
-                onPress={() => setRating(star)}
+                onClick={() => setRating(star)}
                 aria-label={`评${star}星`}
               >
                 ★
               </Button>
             ))}
             <Button
-              isIconOnly
-              variant="light"
+              type="text"
               className="text-default-300"
-              onPress={() => setRating(0)}
+              onClick={() => setRating(0)}
               aria-label="清除评分"
             >
               ✕
@@ -231,19 +230,19 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({
           >
             备注:
           </label>
-          <Textarea
+          <TextArea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="添加关于这餐体验的任何备注..."
-            minRows={3}
+            rows={3}
           />
         </div>
 
         <div className="form-group">
           <Checkbox
-            isSelected={wasPrepared}
-            onValueChange={setWasPrepared}
+            checked={wasPrepared}
+            onChange={(e) => setWasPrepared(e.target.checked)}
             className="text-foreground"
           >
             我准备了这餐
@@ -252,19 +251,17 @@ const HistoryEntryForm: React.FC<HistoryEntryFormProps> = ({
 
         <div className="form-actions flex flex-wrap gap-3 pt-4">
           <Button
-            type="submit"
-            isDisabled={submitting}
-            color="primary"
-            isLoading={submitting}
+            type="primary"
+            htmlType="submit"
+            disabled={submitting}
+            loading={submitting}
           >
             {submitting ? "提交中..." : existingEntry ? "更新记录" : "添加记录"}
           </Button>
           {existingEntry && onCancel && (
             <Button
-              type="button"
-              onPress={onCancel}
-              variant="bordered"
-              color="default"
+              type="default"
+              onClick={onCancel}
             >
               取消
             </Button>

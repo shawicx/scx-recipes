@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import {
   Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
   Button,
-  Chip,
+  Tag,
   Divider,
   Progress,
-  Accordion,
-  AccordionItem,
-  Badge
-} from "@heroui/react";
+  Collapse,
+  Space,
+  Row,
+  Col,
+  Modal
+} from "antd";
+import { CheckCircleOutlined, ClockCircleOutlined, BarChartOutlined, InfoCircleOutlined, StarOutlined } from '@ant-design/icons';
 import { RecommendationItem, DietEntry } from "../../lib/types";
 import { logDietEntry } from "../../lib/api";
+
+const { Panel } = Collapse;
 
 interface RecommendationCardProps {
   recommendation: RecommendationItem;
@@ -27,13 +29,9 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
     return <div>推荐信息不可用</div>;
   }
   
-  const [showDetails, setShowDetails] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isMarkedAsTried, setIsMarkedAsTried] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
-
-  const toggleDetails = () => {
-    setShowDetails(!showDetails);
-  };
 
   const handleMarkAsTried = async () => {
     setIsMarking(true);
@@ -60,75 +58,6 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
     }
   };
 
-  // Format nutritional info for display
-  const formatNutritionalInfo = () => {
-    // Check if nutritional_info exists to prevent errors
-    if (!recommendation.nutritionalInfo) {
-      return <div className="nutritional-info">营养信息不可用</div>;
-    }
-    
-    return (
-      <div className="nutritional-info">
-        <div className="nutrition-item">
-          <span className="nutrition-label">热量:</span>
-          <span className="nutrition-value">
-            {recommendation.nutritionalInfo.calories} 千卡
-          </span>
-        </div>
-        <div className="nutrition-item">
-          <span className="nutrition-label">蛋白质:</span>
-          <span className="nutrition-value">
-            {recommendation.nutritionalInfo.protein}g
-          </span>
-        </div>
-        <div className="nutrition-item">
-          <span className="nutrition-label">碳水化合物:</span>
-          <span className="nutrition-value">
-            {recommendation.nutritionalInfo.carbs}g
-          </span>
-        </div>
-        <div className="nutrition-item">
-          <span className="nutrition-label">脂肪:</span>
-          <span className="nutrition-value">
-            {recommendation.nutritionalInfo.fat}g
-          </span>
-        </div>
-        <div className="nutrition-item">
-          <span className="nutrition-label">纤维:</span>
-          <span className="nutrition-value">
-            {recommendation.nutritionalInfo.fiber}g
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  // Format ingredients list
-  const formatIngredients = () => {
-    // Check if ingredients exist to prevent errors
-    if (!recommendation.ingredients) {
-      return <li>配料信息不可用</li>;
-    }
-    
-    return recommendation.ingredients.map((ingredient, index) => (
-      <li key={index}>
-        {ingredient.amount} {ingredient.unit} {ingredient.name}
-      </li>
-    ));
-  };
-
-  // Calculate relevance indicator
-  const relevanceIndicator = () => {
-    const score = recommendation.relevanceScore;
-    if (score >= 0.8) {
-      return <span className="relevance-high">强烈推荐</span>;
-    } else if (score >= 0.5) {
-      return <span className="relevance-medium">推荐</span>;
-    } else {
-      return <span className="relevance-low">建议</span>;
-    }
-  };
-
   const getRelevanceColor = () => {
     const score = recommendation.relevanceScore;
     if (score >= 0.8) return "success";
@@ -145,9 +74,10 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
   const getMealTypeColor = () => {
     switch (recommendation.mealType) {
-      case "breakfast": return "primary";
-      case "lunch": return "secondary";
-      case "dinner": return "success";
+      case "breakfast": return "blue";
+      case "lunch": return "green";
+      case "dinner": return "orange";
+      case "snack": return "purple";
       default: return "default";
     }
   };
@@ -162,119 +92,281 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
     }
   };
 
+  const getDifficultyColor = () => {
+    const level = recommendation.difficultyLevel;
+    if (level === "easy") return "green";
+    if (level === "medium") return "orange";
+    return "red";
+  };
+
+  const getDifficultyText = () => {
+    const level = recommendation.difficultyLevel;
+    if (level === "easy") return "简单";
+    if (level === "medium") return "中等";
+    return "困难";
+  };
+
+  // Nutritional progress bars component
+  const NutritionalProgressBars = () => {
+    if (!recommendation.nutritionalInfo) return null;
+    
+    const { protein, carbs, fat } = recommendation.nutritionalInfo;
+    const total = protein + carbs + fat;
+    
+    if (total === 0) return null;
+    
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center">
+          <span className="text-xs w-12">蛋白质</span>
+          <Progress 
+            percent={Math.round((protein / total) * 100)} 
+            size="small" 
+            strokeColor="#52c41a"
+            showInfo={false}
+          />
+          <span className="text-xs w-10 text-right">{protein}g</span>
+        </div>
+        <div className="flex items-center">
+          <span className="text-xs w-12">碳水</span>
+          <Progress 
+            percent={Math.round((carbs / total) * 100)} 
+            size="small" 
+            strokeColor="#1890ff"
+            showInfo={false}
+          />
+          <span className="text-xs w-10 text-right">{carbs}g</span>
+        </div>
+        <div className="flex items-center">
+          <span className="text-xs w-12">脂肪</span>
+          <Progress 
+            percent={Math.round((fat / total) * 100)} 
+            size="small" 
+            strokeColor="#faad14"
+            showInfo={false}
+          />
+          <span className="text-xs w-10 text-right">{fat}g</span>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <Card className="w-full h-full">
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col flex-1">
-          <p className="text-lg font-semibold">{recommendation.title}</p>
-          <div className="flex gap-2 items-center mt-2">
-            <Chip
-              color={getRelevanceColor()}
-              variant="flat"
-              size="sm"
-            >
-              {getRelevanceText()}
-            </Chip>
-            <Chip
-              color={getMealTypeColor()}
-              variant="bordered"
-              size="sm"
-            >
-              {getMealTypeText()}
-            </Chip>
+    <>
+      {/* Card for the recommendation list view */}
+      <Card 
+        hoverable
+        className="h-full transition-all duration-300 shadow-sm hover:shadow-md"
+        onClick={() => setIsModalVisible(true)}
+        cover={
+          <div className="h-40 bg-gradient-to-r from-green-100 to-blue-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-4xl mb-2">🍽️</div>
+              <div className="text-sm text-gray-600">食物图片</div>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <Divider/>
-      <CardBody>
-        <p className="text-default-600 mb-4">{recommendation.description}</p>
-
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="text-center">
-            <p className="text-xs text-default-500">准备时间</p>
-            <p className="text-sm font-semibold">{recommendation.preparationTime}分钟</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-default-500">难度</p>
-            <p className="text-sm font-semibold">{recommendation.difficultyLevel}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-default-500">热量</p>
-            <p className="text-sm font-semibold">
-              {recommendation.nutritionalInfo?.calories || "N/A"}千卡
-            </p>
-          </div>
-        </div>
-
-        <Accordion variant="bordered">
-          <AccordionItem key="details" aria-label="详细信息" title="查看详细信息">
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-2">配料:</h4>
-                <div className="grid grid-cols-1 gap-1">
-                  {recommendation.ingredients?.map((ingredient, index) => (
-                    <div key={index} className="flex justify-between items-center bg-default-50 p-2 rounded">
-                      <span className="text-sm">{ingredient.name}</span>
-                      <span className="text-xs text-default-500">{ingredient.amount} {ingredient.unit}</span>
-                    </div>
-                  )) || <p className="text-default-500">配料信息不可用</p>}
-                </div>
+        }
+      >
+        <Card.Meta
+          title={
+            <div className="flex justify-between items-start">
+              <div className="font-semibold truncate max-w-[75%]">{recommendation.title}</div>
+              <Tag 
+                color={getRelevanceColor()} 
+                className="ml-2 flex-shrink-0"
+              >
+                {getRelevanceText()}
+              </Tag>
+            </div>
+          }
+          description={
+            <div className="mt-2">
+              <div className="flex flex-wrap gap-1 mb-2">
+                <Tag color={getMealTypeColor()}>{getMealTypeText()}</Tag>
+                <Tag color={getDifficultyColor()}>{getDifficultyText()}</Tag>
+                <Tag icon={<ClockCircleOutlined />}>{recommendation.preparationTime}分钟</Tag>
               </div>
+              <p className="text-gray-600 text-sm truncate">{recommendation.description}</p>
+            </div>
+          }
+        />
+        
+        <div className="mt-4">
+          <div className="flex justify-between text-sm mb-1">
+            <span>热量: {recommendation.nutritionalInfo?.calories || 0}卡</span>
+            <span>评分: 
+              <StarOutlined className="text-yellow-500 mx-1" />
+              {recommendation.relevanceScore ? recommendation.relevanceScore.toFixed(2) : 'N/A'}
+            </span>
+          </div>
+          <NutritionalProgressBars />
+        </div>
+        
+        <div className="mt-4 flex space-x-2">
+          <Button 
+            type="primary" 
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsModalVisible(true);
+            }}
+            className="flex-1"
+          >
+            查看详情
+          </Button>
+          <Button 
+            type={isMarkedAsTried ? "default" : "primary"}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMarkAsTried();
+            }}
+            disabled={isMarkedAsTried || isMarking}
+            loading={isMarking}
+            icon={isMarkedAsTried ? <CheckCircleOutlined /> : null}
+          >
+            {isMarkedAsTried ? "已尝试" : "尝试"}
+          </Button>
+        </div>
+      </Card>
 
-              <Divider />
-
-              <div>
-                <h4 className="font-semibold mb-2">营养信息:</h4>
-                {recommendation.nutritionalInfo ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">蛋白质:</span>
-                      <span className="text-sm font-semibold">{recommendation.nutritionalInfo.protein}g</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">碳水:</span>
-                      <span className="text-sm font-semibold">{recommendation.nutritionalInfo.carbs}g</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">脂肪:</span>
-                      <span className="text-sm font-semibold">{recommendation.nutritionalInfo.fat}g</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">纤维:</span>
-                      <span className="text-sm font-semibold">{recommendation.nutritionalInfo.fiber}g</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-default-500">营养信息不可用</p>
-                )}
-              </div>
-
-              <Divider />
-
-              <div>
-                <h4 className="font-semibold mb-2">制作步骤:</h4>
-                <p className="text-sm text-default-600 leading-relaxed">
-                  {recommendation.recipeInstructions || "制作步骤不可用"}
-                </p>
+      {/* Modal for detailed view */}
+      <Modal
+        title={null}
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <Card 
+          className="border-0 shadow-none"
+          cover={
+            <div className="h-64 bg-gradient-to-r from-green-100 to-blue-100 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🍽️</div>
+                <div className="text-lg text-gray-600">食物图片</div>
               </div>
             </div>
-          </AccordionItem>
-        </Accordion>
-      </CardBody>
-      <Divider/>
-      <CardFooter>
-        <Button
-          color={isMarkedAsTried ? "success" : "primary"}
-          variant={isMarkedAsTried ? "flat" : "solid"}
-          onPress={handleMarkAsTried}
-          isDisabled={isMarkedAsTried || isMarking}
-          isLoading={isMarking}
-          className="w-full"
+          }
         >
-          {isMarkedAsTried ? "已标记为尝试过 ✓" : "标记为尝试过"}
-        </Button>
-      </CardFooter>
-    </Card>
+          <div className="p-2">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">{recommendation.title}</h2>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Tag color={getRelevanceColor()}>{getRelevanceText()}</Tag>
+                  <Tag color={getMealTypeColor()}>{getMealTypeText()}</Tag>
+                  <Tag color={getDifficultyColor()}>{getDifficultyText()}</Tag>
+                  <Tag icon={<ClockCircleOutlined />}>{recommendation.preparationTime}分钟</Tag>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className="text-2xl font-bold text-green-600">
+                  {recommendation.nutritionalInfo?.calories || 0}卡
+                </div>
+                <div className="text-sm text-gray-500">总热量</div>
+              </div>
+            </div>
+            
+            <p className="text-gray-700 mb-6">{recommendation.description}</p>
+            
+            {/* Nutritional Information Accordion */}
+            <Collapse 
+              bordered={true} 
+              className="mb-6"
+              items={[
+                {
+                  key: 'nutrition',
+                  label: <span><BarChartOutlined /> 营养信息</span>,
+                  children: (
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">营养成分</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="bg-gray-50 p-3 rounded">
+                            <div className="text-center text-green-600 font-bold text-lg">
+                              {recommendation.nutritionalInfo?.protein || 0}g
+                            </div>
+                            <div className="text-center text-gray-600 text-sm">蛋白质</div>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded">
+                            <div className="text-center text-blue-600 font-bold text-lg">
+                              {recommendation.nutritionalInfo?.carbs || 0}g
+                            </div>
+                            <div className="text-center text-gray-600 text-sm">碳水</div>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded">
+                            <div className="text-center text-orange-600 font-bold text-lg">
+                              {recommendation.nutritionalInfo?.fat || 0}g
+                            </div>
+                            <div className="text-center text-gray-600 text-sm">脂肪</div>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded">
+                            <div className="text-center text-purple-600 font-bold text-lg">
+                              {recommendation.nutritionalInfo?.fiber || 0}g
+                            </div>
+                            <div className="text-center text-gray-600 text-sm">纤维</div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4">
+                          <h5 className="font-medium mb-2">营养比例</h5>
+                          <NutritionalProgressBars />
+                        </div>
+                      </div>
+                      
+                      <Divider />
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">配料</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {recommendation.ingredients?.map((ingredient, index) => (
+                            <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                              <span className="text-sm">{ingredient.name}</span>
+                              <span className="text-xs text-gray-500">{ingredient.amount} {ingredient.unit}</span>
+                            </div>
+                          )) || <p className="text-gray-500">配料信息不可用</p>}
+                        </div>
+                      </div>
+                      
+                      <Divider />
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">制作步骤</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          {recommendation.recipeInstructions || "制作步骤不可用"}
+                        </p>
+                      </div>
+                    </div>
+                  ),
+                }
+              ]}
+            />
+            
+            <div className="flex space-x-3">
+              <Button 
+                type="primary" 
+                size="large"
+                onClick={handleMarkAsTried}
+                disabled={isMarkedAsTried || isMarking}
+                loading={isMarking}
+                icon={isMarkedAsTried ? <CheckCircleOutlined /> : null}
+                className="flex-1"
+              >
+                {isMarkedAsTried ? "已标记为尝试过 ✓" : "标记为尝试过"}
+              </Button>
+              <Button 
+                size="large"
+                onClick={() => setIsModalVisible(false)}
+              >
+                关闭
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Modal>
+    </>
   );
 };
 

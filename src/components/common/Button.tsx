@@ -1,17 +1,15 @@
 import React from "react";
-import {
-  Button as HeroUIButton,
-  type ButtonProps as HeroUIButtonProps,
-} from "@heroui/react";
+import { Button as AntButton, type ButtonProps as AntButtonProps } from "antd";
 
-export interface ButtonProps
-  extends Omit<HeroUIButtonProps, "variant" | "size"> {
+export interface ButtonProps {
   variant?: "primary" | "secondary" | "danger" | "outline";
   size?: "small" | "medium" | "large";
   disabled?: boolean;
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
   className?: string;
+  children?: React.ReactNode;
+  [key: string]: any; // Allow other props to be passed through
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -24,50 +22,53 @@ const Button: React.FC<ButtonProps> = ({
   className = "",
   ...props
 }) => {
-  // Map our custom variants to hero-ui variants
-  let heroVariant: HeroUIButtonProps["variant"] = "solid";
+  // Map our custom variants to Ant Design types
+  let buttonType: "link" | "text" | "default" | "primary" | "dashed" = "primary";
   switch (variant) {
     case "outline":
-      heroVariant = "bordered";
+      buttonType = "default";
       break;
     case "secondary":
-      heroVariant = "light";
+      buttonType = "default";
       break;
     case "danger":
-      heroVariant = "solid";
+      buttonType = "primary";
+      className += " bg-red-500 border-red-500 hover:bg-red-600 hover:border-red-600";
       break;
     default:
-      heroVariant = "solid";
+      buttonType = "primary";
   }
 
-  // Map our custom sizes to hero-ui sizes
-  let heroSize: HeroUIButtonProps["size"] = "md";
+  // Map our custom sizes to Ant Design sizes
+  let antSize: "small" | "middle" | "large" | undefined = "middle";
   switch (size) {
     case "small":
-      heroSize = "sm";
+      antSize = "small";
       break;
     case "large":
-      heroSize = "lg";
+      antSize = "large";
       break;
     default:
-      heroSize = "md";
+      antSize = "middle";
   }
 
-  const color = variant === "danger" ? "danger" : "primary";
+  // Add custom styling for outline variant
+  if (variant === "outline") {
+    className += " border-2";
+  }
 
   return (
-    <HeroUIButton
-      variant={heroVariant}
-      size={heroSize}
-      color={color}
+    <AntButton
+      type={buttonType}
+      size={antSize}
       disabled={disabled}
       onClick={onClick}
-      type={type}
+      htmlType={type as "button" | "submit" | "reset" | undefined}
       className={className}
       {...props}
     >
       {children}
-    </HeroUIButton>
+    </AntButton>
   );
 };
 
