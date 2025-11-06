@@ -110,7 +110,7 @@ function App() {
           />
 
           {/* 主要内容区域 */}
-          <Layout className="lg:ml-64">
+          <Layout className="lg:m-4">
             {/* 顶部导航栏 */}
             <Header className="bg-white border-b border-gray-200 px-6 flex items-center justify-between">
               <div className="lg:hidden">

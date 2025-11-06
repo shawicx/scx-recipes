@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Input,
@@ -27,6 +27,11 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import {
+  getHealthProfile,
+  saveHealthProfile,
+  deleteHealthProfile,
+} from "../../lib/api";
 
 // 图标组件
 const UserIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
@@ -68,17 +73,39 @@ const TrashIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 const ProfileForm: React.FC = () => {
   const [isEditing, setIsEditing] = useState(true); // 默认编辑模式便于测试
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: "",
-    age: "",
+  // Define a form-specific type that matches the form's needs
+  interface FormProfileData {
+    id?: string;
+    userId: string;
+    name?: string; // Add name field for UI
+    age?: number;
+    gender: string;
+    weight: number;
+    height: number;
+    activityLevel: string;
+    healthGoals: string[];
+    dietaryPreferences: string[];
+    dietaryRestrictions: string[];
+    allergies: string[];
+    createdAt: string;
+    updatedAt?: string;
+  }
+
+  const [profileData, setProfileData] = useState<FormProfileData>({
+    id: undefined,
+    userId: localStorage.getItem("userId") || "default-user",
+    name: "", // Add name for UI purpose
+    age: undefined,
     gender: "",
-    weight: "70",
-    height: "170",
+    weight: 70,
+    height: 170,
     activityLevel: "",
-    healthGoals: [] as string[],
-    dietaryPreferences: [] as string[],
-    allergies: "",
-    createdAt: "2024-01-15",
+    healthGoals: [],
+    dietaryPreferences: [],
+    dietaryRestrictions: [],
+    allergies: [],
+    createdAt: new Date().toISOString().split("T")[0],
+    updatedAt: undefined,
   });
 
   // 预定义选项
@@ -121,18 +148,91 @@ const ProfileForm: React.FC = () => {
     "亚硫酸盐",
   ];
 
+  // Load profile data on component mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        // Get user ID from local storage or use default
+        const userId = localStorage.getItem("userId") || "default-user";
+        console.log("Loading profile for user:", userId);
+
+        const profile = await getHealthProfile(userId);
+        if (profile) {
+          setProfileData({
+            id: profile.id,
+            userId:
+              profile.userId ||
+              localStorage.getItem("userId") ||
+              "default-user",
+            name: "", // We don't store name in the HealthProfile, just for UI purposes
+            age: profile.age || undefined,
+            gender: profile.gender || "",
+            weight: profile.weight || 70,
+            height: profile.height || 170,
+            activityLevel: profile.activityLevel || "",
+            healthGoals: profile.healthGoals || [],
+            dietaryPreferences: profile.dietaryPreferences || [],
+            dietaryRestrictions: profile.dietaryRestrictions || [],
+            allergies: profile.allergies || [],
+            createdAt:
+              profile.createdAt || new Date().toISOString().split("T")[0],
+            updatedAt: profile.updatedAt,
+          });
+        } else {
+          // If no profile exists, initialize with empty/default values
+          setProfileData({
+            id: undefined,
+            userId: localStorage.getItem("userId") || "default-user",
+            name: "",
+            age: undefined,
+            gender: "",
+            weight: 70,
+            height: 170,
+            activityLevel: "",
+            healthGoals: [],
+            dietaryPreferences: [],
+            dietaryRestrictions: [],
+            allergies: [],
+            createdAt: new Date().toISOString().split("T")[0],
+            updatedAt: undefined,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        // Initialize with defaults if loading fails
+        setProfileData({
+          id: undefined,
+          userId: localStorage.getItem("userId") || "default-user",
+          name: "",
+          age: undefined,
+          gender: "",
+          weight: 70,
+          height: 170,
+          activityLevel: "",
+          healthGoals: [],
+          dietaryPreferences: [],
+          dietaryRestrictions: [],
+          allergies: [],
+          createdAt: new Date().toISOString().split("T")[0],
+          updatedAt: undefined,
+        });
+      }
+    };
+
+    loadProfile();
+  }, []);
+
   // 计算档案完整度
   const getProfileCompleteness = () => {
     const fields = [
-      profileData.name,
-      profileData.age,
+      profileData.age ? profileData.age.toString() : "",
       profileData.gender,
       profileData.weight,
       profileData.height,
       profileData.activityLevel,
       profileData.healthGoals.length > 0 ? "filled" : "",
       profileData.dietaryPreferences.length > 0 ? "filled" : "",
-      profileData.allergies,
+      profileData.allergies.length > 0 ? "filled" : "",
     ];
     const filledFields = fields.filter(
       (field) => field && field.toString().trim() !== "",
@@ -144,8 +244,8 @@ const ProfileForm: React.FC = () => {
 
   // 计算BMI
   const calculateBMI = () => {
-    const weight = parseFloat(profileData.weight);
-    const height = parseFloat(profileData.height) / 100; // 转换为米
+    const weight = profileData.weight;
+    const height = profileData.height / 100; // 转换为米
     if (weight && height) {
       const bmi = weight / (height * height);
       return bmi.toFixed(1);
@@ -162,7 +262,30 @@ const ProfileForm: React.FC = () => {
 
   const handleInputChange = (field: string, value: string) => {
     console.log(`Updating ${field} to:`, value);
-    setProfileData((prev) => ({ ...prev, [field]: value }));
+    setProfileData((prev) => {
+      let processedValue: any = value;
+
+      // Convert field values to appropriate types
+      if (field === "age" && value !== "") {
+        processedValue = parseInt(value) || prev.age;
+      } else if (field === "weight" && value !== "") {
+        processedValue = parseFloat(value) || prev.weight;
+      } else if (field === "height" && value !== "") {
+        processedValue = parseFloat(value) || prev.height;
+      } else if (
+        [
+          "healthGoals",
+          "dietaryPreferences",
+          "dietaryRestrictions",
+          "allergies",
+        ].includes(field)
+      ) {
+        // These are arrays and shouldn't be handled here by string input
+        return prev;
+      }
+
+      return { ...prev, [field]: processedValue };
+    });
   };
 
   const handleHealthGoalChange = (goals: string[]) => {
@@ -177,29 +300,85 @@ const ProfileForm: React.FC = () => {
 
   const handleSliderChange = (field: string, value: number[]) => {
     console.log(`Slider ${field} changed to:`, value[0]);
-    setProfileData((prev) => ({ ...prev, [field]: value[0].toString() }));
+    setProfileData((prev) => ({ ...prev, [field]: value[0] }));
   };
 
-  const handleSave = () => {
-    console.log("保存档案数据:", profileData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      console.log("Saving profile data:", profileData);
+
+      // Prepare profile data for saving (matching HealthProfile type)
+      const profileToSave = {
+        userId: profileData.userId,
+        age: profileData.age || 0, // age is required in HealthProfile, provide default
+        gender: profileData.gender || "other",
+        weight: profileData.weight || 70,
+        height: profileData.height || 170,
+        activityLevel: profileData.activityLevel || "sedentary",
+        healthGoals: Array.isArray(profileData.healthGoals) ? profileData.healthGoals : [],
+        dietaryPreferences: Array.isArray(profileData.dietaryPreferences) ? profileData.dietaryPreferences : [],
+        dietaryRestrictions: Array.isArray(profileData.dietaryRestrictions) ? profileData.dietaryRestrictions : [],
+        allergies: Array.isArray(profileData.allergies) ? profileData.allergies : [],
+        createdAt: profileData.createdAt || new Date().toISOString().split("T")[0],
+        updatedAt: new Date().toISOString().split("T")[0],
+        id: profileData.id, // Use existing ID if present
+      };
+
+      // Save the profile using the API and get the returned ID
+      const returnedId = await saveHealthProfile(profileToSave);
+      
+      // Update the local state with the returned ID if needed
+      if (!profileData.id && returnedId) {
+        setProfileData(prev => ({ ...prev, id: returnedId }));
+      }
+
+      // Dispatch a custom event to notify other components that the profile was updated
+      window.dispatchEvent(
+        new CustomEvent("profileUpdated", { detail: profileToSave }),
+      );
+
+      setIsEditing(false);
+      message.success("健康档案保存成功！");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      message.error("保存健康档案失败，请重试。");
+    }
   };
 
-  const handleDelete = () => {
-    console.log("删除档案");
-    setShowDeleteModal(false);
-    setProfileData({
-      name: "",
-      age: "",
-      gender: "",
-      weight: "70",
-      height: "170",
-      activityLevel: "",
-      healthGoals: [],
-      dietaryPreferences: [],
-      allergies: "",
-      createdAt: "",
-    });
+  const handleDelete = async () => {
+    try {
+      console.log("Deleting profile");
+
+      // Get user ID from local storage or use default
+      const userId = localStorage.getItem("userId") || "default-user";
+
+      // Delete the profile using the API
+      await deleteHealthProfile(userId);
+
+      // Clear the form
+      setProfileData({
+        id: undefined,
+        userId: localStorage.getItem("userId") || "default-user",
+        name: "",
+        age: undefined,
+        gender: "",
+        weight: 70,
+        height: 170,
+        activityLevel: "",
+        healthGoals: [],
+        dietaryPreferences: [],
+        dietaryRestrictions: [],
+        allergies: [],
+        createdAt: new Date().toISOString().split("T")[0],
+        updatedAt: undefined,
+      });
+
+      setShowDeleteModal(false);
+      message.success("健康档案删除成功！");
+    } catch (error) {
+      console.error("Error deleting profile:", error);
+      message.error("删除健康档案失败，请重试。");
+    }
   };
 
   const bmi = calculateBMI();
@@ -282,22 +461,17 @@ const ProfileForm: React.FC = () => {
                 <h4 className="font-semibold text-base">基本信息</h4>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* 姓名输入 */}
+                {/* 用户ID显示 */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    姓名 <span className="text-red-500"> *</span>
+                    用户ID
                   </label>
                   <Input
-                    placeholder="请输入您的姓名"
-                    value={profileData.name}
-                    onChange={(e) =>
-                      handleInputChange("name", e.target.value)
-                    }
-                    disabled={!isEditing}
+                    value={profileData.userId}
+                    disabled={true}
                     size="large"
                     className="w-full"
                   />
-
                 </div>
 
                 {/* 年龄输入 */}
@@ -308,15 +482,12 @@ const ProfileForm: React.FC = () => {
                   <Input
                     placeholder="请输入年龄"
                     type="number"
-                    value={profileData.age}
-                    onChange={(e) =>
-                      handleInputChange("age", e.target.value)
-                    }
+                    value={profileData.age?.toString() || ""}
+                    onChange={(e) => handleInputChange("age", e.target.value)}
                     disabled={!isEditing}
                     size="large"
                     className="w-full"
                   />
-
                 </div>
 
                 {/* 性别选择 */}
@@ -336,7 +507,6 @@ const ProfileForm: React.FC = () => {
                     <Radio value="female">女</Radio>
                     <Radio value="other">其他</Radio>
                   </Radio.Group>
-
                 </div>
 
                 {/* 体重滑块 */}
@@ -349,7 +519,7 @@ const ProfileForm: React.FC = () => {
                       step={0.5}
                       min={30}
                       max={200}
-                      value={parseFloat(profileData.weight) || 70}
+                      value={profileData.weight || 70}
                       onChange={(value) =>
                         handleSliderChange("weight", [value as number])
                       }
@@ -361,7 +531,6 @@ const ProfileForm: React.FC = () => {
                     <span>30kg</span>
                     <span>200kg</span>
                   </div>
-
                 </div>
 
                 {/* 身高滑块 */}
@@ -374,7 +543,7 @@ const ProfileForm: React.FC = () => {
                       step={1}
                       min={120}
                       max={220}
-                      value={parseFloat(profileData.height) || 170}
+                      value={profileData.height || 170}
                       onChange={(value) =>
                         handleSliderChange("height", [value as number])
                       }
@@ -386,7 +555,6 @@ const ProfileForm: React.FC = () => {
                     <span>120cm</span>
                     <span>220cm</span>
                   </div>
-
                 </div>
 
                 {/* 活动水平选择 */}
@@ -420,7 +588,6 @@ const ProfileForm: React.FC = () => {
                       🏋️ 极度活动 (体力工作，每天训练)
                     </Select.Option>
                   </Select>
-
                 </div>
               </div>
             </div>
@@ -435,26 +602,31 @@ const ProfileForm: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   健康目标 (可多选)
                 </label>
-                <Radio.Group
-                  value={profileData.healthGoals}
-                  onChange={(e) => handleHealthGoalChange(e.target.value)}
-                  disabled={!isEditing}
-                  className="flex flex-wrap gap-4"
-                >
+                <div className="flex flex-wrap gap-3">
                   {healthGoalOptions.map((goal) => (
-                    <Radio.Button
+                    <Tag
                       key={goal.value}
-                      value={goal.value}
-                      className="max-w-full"
+                      color={
+                        profileData.healthGoals.includes(goal.value)
+                          ? "processing"
+                          : "default"
+                      }
+                      className={`cursor-pointer transition-all ${!isEditing ? "pointer-events-none opacity-60" : "hover:scale-105"}`}
+                      onClick={() => {
+                        if (!isEditing) return;
+                        const newGoals = profileData.healthGoals.includes(goal.value)
+                          ? profileData.healthGoals.filter((g) => g !== goal.value)
+                          : [...profileData.healthGoals, goal.value];
+                        handleHealthGoalChange(newGoals);
+                      }}
                     >
                       <div className="flex items-center gap-2">
                         <span>{goal.icon}</span>
                         <span>{goal.label}</span>
                       </div>
-                    </Radio.Button>
+                    </Tag>
                   ))}
-                </Radio.Group>
-
+                </div>
               </div>
             </div>
 
@@ -473,9 +645,7 @@ const ProfileForm: React.FC = () => {
                     <Tag
                       key={preference}
                       color={
-                        profileData.dietaryPreferences.includes(
-                          preference,
-                        )
+                        profileData.dietaryPreferences.includes(preference)
                           ? "processing"
                           : "default"
                       }
@@ -483,16 +653,11 @@ const ProfileForm: React.FC = () => {
                       onClick={() => {
                         if (!isEditing) return;
                         const newPreferences =
-                          profileData.dietaryPreferences.includes(
-                            preference,
-                          )
+                          profileData.dietaryPreferences.includes(preference)
                             ? profileData.dietaryPreferences.filter(
                                 (p) => p !== preference,
                               )
-                            : [
-                                ...profileData.dietaryPreferences,
-                                preference,
-                              ];
+                            : [...profileData.dietaryPreferences, preference];
                         handleDietaryPreferenceChange(newPreferences);
                       }}
                     >
@@ -500,7 +665,6 @@ const ProfileForm: React.FC = () => {
                     </Tag>
                   ))}
                 </div>
-
               </div>
             </div>
 
@@ -514,24 +678,31 @@ const ProfileForm: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   过敏或忌口食物
                 </label>
-                <AutoComplete
-                  placeholder="搜索并选择过敏食物"
-                  value={profileData.allergies}
-                  onChange={(value) =>
-                    handleInputChange("allergies", value as string)
-                  }
-                  disabled={!isEditing}
-                  size="large"
-                  className="w-full"
-                  options={allergyOptions.map((option) => ({
-                    value: option,
-                  }))}
-                />
-
+                <div className="flex flex-wrap gap-3">
+                  {allergyOptions.map((allergy) => (
+                    <Tag
+                      key={allergy}
+                      color={
+                        profileData.allergies.includes(allergy)
+                          ? "red"
+                          : "default"
+                      }
+                      className={`cursor-pointer transition-all ${!isEditing ? "pointer-events-none opacity-60" : "hover:scale-105"}`}
+                      onClick={() => {
+                        if (!isEditing) return;
+                        const newAllergies = profileData.allergies.includes(allergy)
+                          ? profileData.allergies.filter((a) => a !== allergy)
+                          : [...profileData.allergies, allergy];
+                        setProfileData((prev) => ({ ...prev, allergies: newAllergies }));
+                      }}
+                    >
+                      {allergy}
+                    </Tag>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-
         </Card>
 
         {/* 操作按钮区 */}
