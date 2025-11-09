@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
-import { Alert } from "../components/common";
+import { Alert } from "antd";
 
 interface ErrorState {
   message: string | null;

@@ -1,7 +1,7 @@
 import React from "react";
 import ProfileForm from "./ProfileForm";
 
-const ProfileSetup: React.FC = () => {
+const ProfileSetup = () => {
   return <ProfileForm />;
 };
 
