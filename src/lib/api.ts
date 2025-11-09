@@ -211,3 +211,48 @@ export const getConfig = async (): Promise<AppConfig> => {
 export const setConfig = async (config: AppConfig): Promise<boolean> => {
   return await invoke("set_config", { config });
 };
+
+// Diet History Management Functions
+export const addDietHistory = async (
+  userId: string,
+  historyData: {
+    date: string;
+    mealType: string;
+    foodItems: string;
+    calories: number;
+    notes?: string;
+  }
+): Promise<boolean> => {
+  return await invoke("add_diet_history", {
+    userId,
+    date: historyData.date,
+    mealType: historyData.mealType,
+    foodItems: historyData.foodItems,
+    calories: historyData.calories,
+    notes: historyData.notes || "",
+  });
+};
+
+export const updateDietHistory = async (
+  id: string,
+  historyData: {
+    date: string;
+    mealType: string;
+    foodItems: string;
+    calories: number;
+    notes?: string;
+  }
+): Promise<boolean> => {
+  return await invoke("update_diet_history", {
+    id,
+    date: historyData.date,
+    mealType: historyData.mealType,
+    foodItems: historyData.foodItems,
+    calories: historyData.calories,
+    notes: historyData.notes || "",
+  });
+};
+
+export const deleteDietHistory = async (id: string): Promise<boolean> => {
+  return await invoke("delete_diet_history", { id });
+};
