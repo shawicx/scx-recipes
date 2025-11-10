@@ -615,7 +615,17 @@ pub fn get_config() -> Result<AppConfigDto, String> {
 
 #[tauri::command]
 pub fn set_config(config: AppConfigDto) -> Result<bool, String> {
-    // In a real implementation, we would save the config to a file
-    // For now, we'll just return true to indicate success
-    Ok(true) // Placeholder implementation
+    log::info!("Updating application configuration");
+    
+    // Update the configuration
+    crate::config::update_app_config(
+        Some(config.privacy_mode),
+        Some(config.theme),
+    ).map_err(|e| {
+        log::error!("Failed to update application configuration: {}", e);
+        e.to_string()
+    })?;
+    
+    log::info!("Successfully updated application configuration");
+    Ok(true)
 }

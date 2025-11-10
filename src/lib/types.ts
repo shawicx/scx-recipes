@@ -4,14 +4,14 @@ export interface HealthProfile {
   id?: string;
   userId: string;
   age: number;
-  gender: "male" | "female" | "other" | "prefer_not_to_say";
+  gender: "male" | "female" | "other";
   weight: number; // in kg
   height: number; // in cm
-  activityLevel: "sedentary" | "light" | "moderate" | "active" | "very_active";
-  healthGoals: string[]; // e.g., ['weight_loss', 'muscle_gain']
-  dietaryPreferences: string[]; // e.g., ['vegetarian', 'low_carb']
-  dietaryRestrictions: string[]; // specific foods/ingredients to avoid
-  allergies: string[]; // allergens to avoid
+  activityLevel: "sedentary" | "lightly_active" | "moderately_active" | "very_active" | "extremely_active";
+  healthGoals: string[]; // e.g., ['weight_loss', 'muscle_building', 'general_health']
+  dietaryPreferences: string[]; // e.g., ['vegetarian', 'vegan', 'keto']
+  dietaryRestrictions: string[]; // specific dietary restrictions like "低钠", "无麸质"
+  allergies: string[]; // allergens to avoid like "坚果", "鸡蛋"
   createdAt?: string;
   updatedAt?: string;
 }
