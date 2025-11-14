@@ -24,15 +24,15 @@ function AppContent() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard key="dashboard" />;
+        return <Dashboard />;
       case "profile":
-        return <ProfileForm key="profile" />;
+        return <ProfileForm />;
       case "recommendations":
-        return <RecommendationList key="recommendations" />;
+        return <RecommendationList />;
       case "history":
-        return <HistoryList key="history" />;
+        return <HistoryList />;
       default:
-        return <Dashboard key="default" />;
+        return <Dashboard />;
     }
   };
 

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime};
 use rusqlite::{Connection, OptionalExtension};
 use std::path::{Path, PathBuf};
 use uuid::Uuid;

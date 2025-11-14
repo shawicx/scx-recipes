@@ -23,7 +23,12 @@ import {
   DeleteOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { getHealthProfile, saveHealthProfile, deleteHealthProfile } from "../../lib/api";
+import {
+  getHealthProfile,
+  saveHealthProfile,
+  deleteHealthProfile,
+} from "../../lib/api";
+import { useLoadingState } from "../../hooks/useLoadingState";
 
 const { Option } = Select;
 const { CheckableTag } = Tag;
@@ -33,10 +38,15 @@ interface HealthProfileForm {
   id?: string;
   userId: string;
   age: number;
-  gender: string;
+  gender: "male" | "female" | "other";
   weight: number;
   height: number;
-  activityLevel: string;
+  activityLevel:
+  | "sedentary"
+  | "lightly_active"
+  | "moderately_active"
+  | "very_active"
+  | "extremely_active";
   healthGoals: string[];
   dietaryPreferences: string[];
   dietaryRestrictions: string[];
@@ -47,10 +57,14 @@ interface HealthProfileForm {
 
 const ProfileForm: React.FC = () => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [profileData, setProfileData] = useState<HealthProfileForm | null>(null);
+  const [profileData, setProfileData] = useState<HealthProfileForm | null>(
+    null,
+  );
   const [isEditing, setIsEditing] = useState(false);
+
+  const { loading: saving, execute: executeSave } = useLoadingState();
+  const { loading: deleting, execute: executeDelete } = useLoadingState();
+  const { loading: loadingProfile, execute: executeLoad } = useLoadingState();
 
   // 选项配置
   const genderOptions = [
@@ -60,11 +74,31 @@ const ProfileForm: React.FC = () => {
   ];
 
   const activityLevelOptions = [
-    { value: "sedentary", label: "久坐不动", description: "很少运动，主要是坐着工作" },
-    { value: "lightly_active", label: "轻度活跃", description: "每周1-3天轻度运动" },
-    { value: "moderately_active", label: "中度活跃", description: "每周3-5天中等运动" },
-    { value: "very_active", label: "高度活跃", description: "每周6-7天高强度运动" },
-    { value: "extremely_active", label: "极度活跃", description: "每天高强度运动或体力工作" },
+    {
+      value: "sedentary",
+      label: "久坐不动",
+      description: "很少运动，主要是坐着工作",
+    },
+    {
+      value: "lightly_active",
+      label: "轻度活跃",
+      description: "每周1-3天轻度运动",
+    },
+    {
+      value: "moderately_active",
+      label: "中度活跃",
+      description: "每周3-5天中等运动",
+    },
+    {
+      value: "very_active",
+      label: "高度活跃",
+      description: "每周6-7天高强度运动",
+    },
+    {
+      value: "extremely_active",
+      label: "极度活跃",
+      description: "每天高强度运动或体力工作",
+    },
   ];
 
   const healthGoalOptions = [
@@ -113,71 +147,63 @@ const ProfileForm: React.FC = () => {
   ];
 
   useEffect(() => {
-    loadProfile();
+    executeLoad(loadProfileInternal());
   }, []);
+
+  const loadProfileInternal = async () => {
+    const userId = localStorage.getItem("userId") || "default-user";
+    const profile = await getHealthProfile(userId);
+
+    if (profile) {
+      setProfileData(profile);
+      form.setFieldsValue({
+        ...profile,
+        // 确保数组字段正确设置
+        healthGoals: profile.healthGoals || [],
+        dietaryPreferences: profile.dietaryPreferences || [],
+        dietaryRestrictions: profile.dietaryRestrictions || [],
+        allergies: profile.allergies || [],
+      });
+    } else {
+      // 如果没有档案，进入编辑模式
+      setIsEditing(true);
+      form.setFieldsValue({
+        userId: localStorage.getItem("userId") || "default-user",
+        age: 25,
+        gender: "",
+        weight: 70,
+        height: 170,
+        activityLevel: "",
+        healthGoals: [],
+        dietaryPreferences: [],
+        dietaryRestrictions: [],
+        allergies: [],
+      });
+    }
+  };
 
   const loadProfile = async () => {
     try {
-      setLoading(true);
-      const userId = localStorage.getItem("userId") || "default-user";
-      const profile = await getHealthProfile(userId);
-      
-      if (profile) {
-        setProfileData(profile);
-        form.setFieldsValue({
-          ...profile,
-          // 确保数组字段正确设置
-          healthGoals: profile.healthGoals || [],
-          dietaryPreferences: profile.dietaryPreferences || [],
-          dietaryRestrictions: profile.dietaryRestrictions || [],
-          allergies: profile.allergies || [],
-        });
-      } else {
-        // 如果没有档案，进入编辑模式
-        setIsEditing(true);
-        form.setFieldsValue({
-          userId: localStorage.getItem("userId") || "default-user",
-          age: 25,
-          gender: "",
-          weight: 70,
-          height: 170,
-          activityLevel: "",
-          healthGoals: [],
-          dietaryPreferences: [],
-          dietaryRestrictions: [],
-          allergies: [],
-        });
-      }
+      await executeLoad(loadProfileInternal());
     } catch (error) {
       console.error("Error loading profile:", error);
       message.error("加载健康档案失败");
       setIsEditing(true);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleSave = async () => {
-    try {
-      setSaving(true);
-      const values = await form.validateFields();
-      
-      const profileToSave: HealthProfileForm = {
-        ...profileData,
-        ...values,
-        userId: localStorage.getItem("userId") || "default-user",
-      };
+    const values = await form.validateFields();
+    const profileToSave: HealthProfileForm = {
+      ...profileData,
+      ...values,
+      userId: localStorage.getItem("userId") || "default-user",
+    };
 
-      await saveHealthProfile(profileToSave);
-      message.success("健康档案保存成功！");
-      setIsEditing(false);
-      loadProfile();
-    } catch (error) {
-      console.error("Error saving profile:", error);
-      message.error("保存健康档案失败");
-    } finally {
-      setSaving(false);
-    }
+    await saveHealthProfile(profileToSave);
+    message.success("健康档案保存成功！");
+    setProfileData(profileToSave); // Update local state with saved data
+    setIsEditing(false);
   };
 
   const handleDelete = async () => {
@@ -194,14 +220,18 @@ const ProfileForm: React.FC = () => {
     }
   };
 
-  const toggleArrayValue = (fieldName: string, value: string, currentValues: string[]) => {
+  const toggleArrayValue = (
+    fieldName: string,
+    value: string,
+    currentValues: string[],
+  ) => {
     const newValues = currentValues.includes(value)
-      ? currentValues.filter(v => v !== value)
+      ? currentValues.filter((v) => v !== value)
       : [...currentValues, value];
     form.setFieldValue(fieldName, newValues);
   };
 
-  if (loading) {
+  if (loadingProfile) {
     return (
       <div className="flex justify-center items-center min-h-96">
         <Spin size="large" />
@@ -221,23 +251,23 @@ const ProfileForm: React.FC = () => {
         extra={
           <Space>
             {profileData && !isEditing && (
-              <Button onClick={() => setIsEditing(true)}>
-                编辑档案
-              </Button>
+              <Button onClick={() => setIsEditing(true)}>编辑档案</Button>
             )}
             {isEditing && (
               <>
-                <Button onClick={() => {
-                  setIsEditing(false);
-                  loadProfile();
-                }}>
+                <Button
+                  onClick={() => {
+                    setIsEditing(false);
+                    loadProfile();
+                  }}
+                >
                   取消
                 </Button>
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}
                   loading={saving}
-                  onClick={handleSave}
+                  onClick={() => executeSave(handleSave())}
                 >
                   保存档案
                 </Button>
@@ -261,17 +291,29 @@ const ProfileForm: React.FC = () => {
                   name="age"
                   rules={[
                     { required: true, message: "请输入年龄" },
-                    { type: "number", min: 1, max: 150, message: "年龄必须在1-150之间" },
+                    {
+                      type: "number",
+                      min: 1,
+                      max: 150,
+                      message: "年龄必须在1-150之间",
+                    },
                   ]}
                 >
                   <Slider
                     min={1}
-                    max={150}
-                    marks={{ 1: '1', 50: '50', 100: '100', 150: '150' }}
+                    max={50}
+                    marks={{
+                      1: "1",
+                      10: "10",
+                      20: "20",
+                      30: "30",
+                      40: "40",
+                      50: "50",
+                    }}
                   />
                 </Form.Item>
               </Col>
-              
+
               <Col xs={24} sm={8}>
                 <Form.Item
                   label="性别"
@@ -279,7 +321,7 @@ const ProfileForm: React.FC = () => {
                   rules={[{ required: true, message: "请选择性别" }]}
                 >
                   <Select placeholder="选择性别">
-                    {genderOptions.map(option => (
+                    {genderOptions.map((option) => (
                       <Option key={option.value} value={option.value}>
                         {option.label}
                       </Option>
@@ -295,11 +337,13 @@ const ProfileForm: React.FC = () => {
                   rules={[{ required: true, message: "请选择活动水平" }]}
                 >
                   <Select placeholder="选择活动水平">
-                    {activityLevelOptions.map(option => (
+                    {activityLevelOptions.map((option) => (
                       <Option key={option.value} value={option.value}>
-                        <div>
+                        <div className="flex items-center">
                           <div>{option.label}</div>
-                          <div className="text-xs text-gray-500">{option.description}</div>
+                          <div className="text-xs text-gray-500 ml-2">
+                            {option.description}
+                          </div>
                         </div>
                       </Option>
                     ))}
@@ -315,13 +359,18 @@ const ProfileForm: React.FC = () => {
                   name="weight"
                   rules={[
                     { required: true, message: "请输入体重" },
-                    { type: "number", min: 20, max: 300, message: "体重必须在20-300kg之间" },
+                    {
+                      type: "number",
+                      min: 20,
+                      max: 300,
+                      message: "体重必须在20-300kg之间",
+                    },
                   ]}
                 >
                   <Slider
                     min={20}
                     max={300}
-                    marks={{ 20: '20', 70: '70', 150: '150', 300: '300' }}
+                    marks={{ 20: "20", 70: "70", 150: "150", 300: "300" }}
                   />
                 </Form.Item>
               </Col>
@@ -332,13 +381,18 @@ const ProfileForm: React.FC = () => {
                   name="height"
                   rules={[
                     { required: true, message: "请输入身高" },
-                    { type: "number", min: 100, max: 250, message: "身高必须在100-250cm之间" },
+                    {
+                      type: "number",
+                      min: 100,
+                      max: 250,
+                      message: "身高必须在100-250cm之间",
+                    },
                   ]}
                 >
                   <Slider
                     min={100}
                     max={250}
-                    marks={{ 100: '100', 170: '170', 200: '200', 250: '250' }}
+                    marks={{ 100: "100", 170: "170", 200: "200", 250: "250" }}
                   />
                 </Form.Item>
               </Col>
@@ -347,21 +401,30 @@ const ProfileForm: React.FC = () => {
 
           {/* 健康目标 */}
           <Card size="small" title="健康目标" type="inner">
-            <Form.Item
-              label="选择您的健康目标（可多选）"
-              name="healthGoals"
-            >
+            <Form.Item label="选择您的健康目标（可多选）" name="healthGoals">
               <Form.Item noStyle shouldUpdate>
                 {() => {
-                  const currentValues = form.getFieldValue('healthGoals') || [];
+                  const currentValues = form.getFieldValue("healthGoals") || [];
                   return (
                     <div className="space-y-2">
-                      {healthGoalOptions.map(goal => (
+                      {healthGoalOptions.map((goal) => (
                         <CheckableTag
                           key={goal.value}
                           checked={currentValues.includes(goal.value)}
-                          onChange={() => toggleArrayValue('healthGoals', goal.value, currentValues)}
+                          onChange={
+                            isEditing
+                              ? () =>
+                                toggleArrayValue(
+                                  "healthGoals",
+                                  goal.value,
+                                  currentValues,
+                                )
+                              : undefined
+                          }
                           className="mr-2 mb-2"
+                          style={{
+                            cursor: isEditing ? "pointer" : "not-allowed",
+                          }}
                         >
                           <span className="mr-1">{goal.icon}</span>
                           {goal.label}
@@ -376,21 +439,31 @@ const ProfileForm: React.FC = () => {
 
           {/* 饮食偏好 */}
           <Card size="small" title="饮食偏好" type="inner">
-            <Form.Item
-              label="选择您的饮食偏好"
-              name="dietaryPreferences"
-            >
+            <Form.Item label="选择您的饮食偏好" name="dietaryPreferences">
               <Form.Item noStyle shouldUpdate>
                 {() => {
-                  const currentValues = form.getFieldValue('dietaryPreferences') || [];
+                  const currentValues =
+                    form.getFieldValue("dietaryPreferences") || [];
                   return (
                     <div className="space-y-2">
-                      {dietaryPreferenceOptions.map(pref => (
+                      {dietaryPreferenceOptions.map((pref) => (
                         <CheckableTag
                           key={pref.value}
                           checked={currentValues.includes(pref.value)}
-                          onChange={() => toggleArrayValue('dietaryPreferences', pref.value, currentValues)}
+                          onChange={
+                            isEditing
+                              ? () =>
+                                toggleArrayValue(
+                                  "dietaryPreferences",
+                                  pref.value,
+                                  currentValues,
+                                )
+                              : undefined
+                          }
                           className="mr-2 mb-2"
+                          style={{
+                            cursor: isEditing ? "pointer" : "not-allowed",
+                          }}
                         >
                           <span className="mr-1">{pref.icon}</span>
                           {pref.label}
@@ -411,15 +484,28 @@ const ProfileForm: React.FC = () => {
             >
               <Form.Item noStyle shouldUpdate>
                 {() => {
-                  const currentValues = form.getFieldValue('dietaryRestrictions') || [];
+                  const currentValues =
+                    form.getFieldValue("dietaryRestrictions") || [];
                   return (
                     <div className="space-y-2">
-                      {dietaryRestrictionOptions.map(restriction => (
+                      {dietaryRestrictionOptions.map((restriction) => (
                         <CheckableTag
                           key={restriction}
                           checked={currentValues.includes(restriction)}
-                          onChange={() => toggleArrayValue('dietaryRestrictions', restriction, currentValues)}
+                          onChange={
+                            isEditing
+                              ? () =>
+                                toggleArrayValue(
+                                  "dietaryRestrictions",
+                                  restriction,
+                                  currentValues,
+                                )
+                              : undefined
+                          }
                           className="mr-2 mb-2"
+                          style={{
+                            cursor: isEditing ? "pointer" : "not-allowed",
+                          }}
                         >
                           {restriction}
                         </CheckableTag>
@@ -433,21 +519,30 @@ const ProfileForm: React.FC = () => {
 
           {/* 过敏信息 */}
           <Card size="small" title="过敏信息" type="inner">
-            <Form.Item
-              label="选择您的过敏原（可多选）"
-              name="allergies"
-            >
+            <Form.Item label="选择您的过敏原（可多选）" name="allergies">
               <Form.Item noStyle shouldUpdate>
                 {() => {
-                  const currentValues = form.getFieldValue('allergies') || [];
+                  const currentValues = form.getFieldValue("allergies") || [];
                   return (
                     <div className="space-y-2">
-                      {allergyOptions.map(allergy => (
+                      {allergyOptions.map((allergy) => (
                         <CheckableTag
                           key={allergy}
                           checked={currentValues.includes(allergy)}
-                          onChange={() => toggleArrayValue('allergies', allergy, currentValues)}
-                          className={`mr-2 mb-2 ${currentValues.includes(allergy) ? 'bg-red-100 border-red-300' : ''}`}
+                          onChange={
+                            isEditing
+                              ? () =>
+                                toggleArrayValue(
+                                  "allergies",
+                                  allergy,
+                                  currentValues,
+                                )
+                              : undefined
+                          }
+                          className={`mr-2 mb-2 ${currentValues.includes(allergy) ? "bg-red-100 border-red-300" : ""}`}
+                          style={{
+                            cursor: isEditing ? "pointer" : "not-allowed",
+                          }}
                         >
                           {allergy}
                         </CheckableTag>
@@ -464,103 +559,16 @@ const ProfileForm: React.FC = () => {
         {profileData && !isEditing && (
           <div className="mt-6 pt-6 border-t border-gray-200">
             <Space>
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleDelete}
-              >
+              <Button danger icon={<DeleteOutlined />} loading={deleting} onClick={() => executeDelete(handleDelete())}>
                 删除档案
               </Button>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={loadProfile}
-              >
+              <Button icon={<ReloadOutlined />} loading={loadingProfile} onClick={loadProfile}>
                 重新加载
               </Button>
             </Space>
           </div>
         )}
       </Card>
-
-      {/* 档案概览 */}
-      {profileData && !isEditing && (
-        <Card title="档案概览" size="small">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <strong>基本信息：</strong>
-              <div className="text-sm text-gray-600 mt-1">
-                {profileData.age}岁 • {genderOptions.find(g => g.value === profileData.gender)?.label} • 
-                体重{profileData.weight}kg • 身高{profileData.height}cm
-              </div>
-            </div>
-            
-            <div>
-              <strong>活动水平：</strong>
-              <div className="text-sm text-gray-600 mt-1">
-                {activityLevelOptions.find(a => a.value === profileData.activityLevel)?.label}
-              </div>
-            </div>
-
-            {profileData.healthGoals.length > 0 && (
-              <div>
-                <strong>健康目标：</strong>
-                <div className="mt-1">
-                  {profileData.healthGoals.map(goal => {
-                    const goalOption = healthGoalOptions.find(g => g.value === goal);
-                    return goalOption ? (
-                      <Tag key={goal} className="mr-1 mb-1">
-                        {goalOption.icon} {goalOption.label}
-                      </Tag>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            )}
-
-            {profileData.dietaryPreferences.length > 0 && (
-              <div>
-                <strong>饮食偏好：</strong>
-                <div className="mt-1">
-                  {profileData.dietaryPreferences.map(pref => {
-                    const prefOption = dietaryPreferenceOptions.find(p => p.value === pref);
-                    return prefOption ? (
-                      <Tag key={pref} color="blue" className="mr-1 mb-1">
-                        {prefOption.icon} {prefOption.label}
-                      </Tag>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            )}
-
-            {profileData.dietaryRestrictions.length > 0 && (
-              <div>
-                <strong>饮食限制：</strong>
-                <div className="mt-1">
-                  {profileData.dietaryRestrictions.map(restriction => (
-                    <Tag key={restriction} color="orange" className="mr-1 mb-1">
-                      {restriction}
-                    </Tag>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profileData.allergies.length > 0 && (
-              <div>
-                <strong>过敏原：</strong>
-                <div className="mt-1">
-                  {profileData.allergies.map(allergy => (
-                    <Tag key={allergy} color="red" className="mr-1 mb-1">
-                      {allergy}
-                    </Tag>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
     </div>
   );
 };

@@ -26,37 +26,27 @@ import {
   addDietHistory,
   updateDietHistory,
   deleteDietHistory,
+  DietEntry,
+  GetHistoryParams,
 } from "../../lib/api";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-interface DietHistory {
-  id: string;
-  userId: string;
-  date: string;
-  mealType: string;
-  foodItems: string;
-  calories: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface HistoryFormData {
   date: string;
-  mealType: string;
+  mealType: "breakfast" | "lunch" | "dinner" | "snack";
   foodItems: string;
   calories: number;
   notes?: string;
 }
 
 const HistoryList: React.FC = () => {
-  const [history, setHistory] = useState<DietHistory[]>([]);
+  const [history, setHistory] = useState<DietEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<DietHistory | null>(null);
+  const [editingRecord, setEditingRecord] = useState<DietEntry | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -68,9 +58,9 @@ const HistoryList: React.FC = () => {
       setLoading(true);
       const userId = localStorage.getItem("userId") || "default-user";
       const data = await getDietHistory({ userId });
-      // 按日期降序排列
+      // 按日期降序排列 (DietEntry使用dateAttempted字段而不是date)
       const sortedData = data.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        (a, b) => new Date(b.dateAttempted).getTime() - new Date(a.dateAttempted).getTime(),
       );
       setHistory(sortedData);
     } catch (error) {
@@ -91,13 +81,12 @@ const HistoryList: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (record: DietHistory) => {
+  const handleEdit = (record: DietEntry) => {
     setEditingRecord(record);
     form.setFieldsValue({
-      date: dayjs(record.date),
+      date: dayjs(record.dateAttempted),
       mealType: record.mealType,
-      foodItems: record.foodItems,
-      calories: record.calories,
+      // 注意: DietEntry 中没有 foodItems 和 calories 字段，这些可能需要根据dietItemId关联的数据来获取
       notes: record.notes,
     });
     setModalVisible(true);
@@ -215,8 +204,7 @@ const HistoryList: React.FC = () => {
                   <CalendarOutlined className="mr-2" />
                   {dayjs(date).format("YYYY年M月D日 dddd")}
                   <span className="ml-2 text-sm text-gray-500">
-                    (共{records.length}条记录,{" "}
-                    {records.reduce((sum, r) => sum + r.calories, 0)}卡路里)
+                    (共{records.length}条记录)
                   </span>
                 </div>
               }
@@ -266,10 +254,7 @@ const HistoryList: React.FC = () => {
                             {getMealTypeLabel(record.mealType)}
                           </Tag>
                           <span className="font-medium">
-                            {record.foodItems}
-                          </span>
-                          <span className="text-orange-600 font-semibold">
-                            {record.calories} kcal
+                            饮食记录
                           </span>
                         </div>
                       }
@@ -279,8 +264,8 @@ const HistoryList: React.FC = () => {
                             <div className="mb-1">备注: {record.notes}</div>
                           )}
                           <div className="text-xs text-gray-400">
-                            创建时间: {dayjs(record.createdAt).format("HH:mm")}
-                            {record.updatedAt !== record.createdAt &&
+                            尝试时间: {dayjs(record.dateAttempted).format("HH:mm")}
+                            {record.updatedAt && record.updatedAt !== record.createdAt &&
                               ` (更新于 ${dayjs(record.updatedAt).format("HH:mm")})`}
                           </div>
                         </div>
