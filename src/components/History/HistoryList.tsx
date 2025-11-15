@@ -7,60 +7,58 @@ import {
   Spin,
   message,
   Tag,
-  Modal,
-  Form,
-  Input,
   Select,
   DatePicker,
-  InputNumber,
-  Space,
+  Rate,
+  Popconfirm,
 } from "antd";
 import {
-  PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   CalendarOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
-import {
-  getDietHistory,
-  addDietHistory,
-  updateDietHistory,
-  deleteDietHistory,
-  DietEntry,
-  GetHistoryParams,
-} from "../../lib/api";
+import { getDietHistory } from "../../lib/api";
+import { DietEntry } from "../../lib/types";
 import dayjs from "dayjs";
+import HistoryEditModal from "./HistoryEditModal";
 
-const { Option } = Select;
-const { TextArea } = Input;
-
-interface HistoryFormData {
-  date: string;
-  mealType: "breakfast" | "lunch" | "dinner" | "snack";
-  foodItems: string;
-  calories: number;
-  notes?: string;
+interface HistoryListProps {
+  mealTypeFilter?: "breakfast" | "lunch" | "dinner" | "snack" | "all";
 }
 
-const HistoryList: React.FC = () => {
+const HistoryList: React.FC<HistoryListProps> = ({
+  mealTypeFilter = "all",
+}) => {
   const [history, setHistory] = useState<DietEntry[]>([]);
+  const [filteredHistory, setFilteredHistory] = useState<DietEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DietEntry | null>(null);
-  const [form] = Form.useForm();
+  const [currentMealTypeFilter, setCurrentMealTypeFilter] =
+    useState<string>(mealTypeFilter);
+  const [dateRangeFilter, setDateRangeFilter] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null]
+  >([null, null]);
 
   useEffect(() => {
     loadHistory();
   }, []);
+
+  useEffect(() => {
+    filterHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history, currentMealTypeFilter, dateRangeFilter]);
 
   const loadHistory = async () => {
     try {
       setLoading(true);
       const userId = localStorage.getItem("userId") || "default-user";
       const data = await getDietHistory({ userId });
-      // 按日期降序排列 (DietEntry使用dateAttempted字段而不是date)
       const sortedData = data.sort(
-        (a, b) => new Date(b.dateAttempted).getTime() - new Date(a.dateAttempted).getTime(),
+        (a, b) =>
+          new Date(b.dateAttempted).getTime() -
+          new Date(a.dateAttempted).getTime()
       );
       setHistory(sortedData);
     } catch (error) {
@@ -71,63 +69,51 @@ const HistoryList: React.FC = () => {
     }
   };
 
-  const handleAdd = () => {
-    setEditingRecord(null);
-    form.resetFields();
-    form.setFieldsValue({
-      date: dayjs(),
-      mealType: "breakfast",
-    });
-    setModalVisible(true);
+  const filterHistory = () => {
+    let filtered = [...history];
+
+    // 餐次过滤
+    if (currentMealTypeFilter !== "all") {
+      filtered = filtered.filter(
+        (entry) => entry.mealType === currentMealTypeFilter
+      );
+    }
+
+    // 日期范围过滤
+    if (dateRangeFilter[0] && dateRangeFilter[1]) {
+      const startDate = dateRangeFilter[0].startOf("day");
+      const endDate = dateRangeFilter[1].endOf("day");
+      filtered = filtered.filter((entry) => {
+        const entryDate = dayjs(entry.dateAttempted);
+        return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
+      });
+    }
+
+    setFilteredHistory(filtered);
   };
 
   const handleEdit = (record: DietEntry) => {
     setEditingRecord(record);
-    form.setFieldsValue({
-      date: dayjs(record.dateAttempted),
-      mealType: record.mealType,
-      // 注意: DietEntry 中没有 foodItems 和 calories 字段，这些可能需要根据dietItemId关联的数据来获取
-      notes: record.notes,
-    });
-    setModalVisible(true);
+    setEditModalVisible(true);
   };
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDietHistory(id);
-      message.success("删除成功");
-      loadHistory();
+      // Note: We need to implement delete functionality in API
+      // await deleteDietEntry(id);
+      console.warn("Delete functionality not yet implemented", id);
+      message.warning("删除功能暂未实现");
+      // loadHistory();
     } catch (error) {
       console.error("Error deleting history:", error);
       message.error("删除失败");
     }
   };
 
-  const handleSubmit = async (values: any) => {
-    try {
-      const userId = localStorage.getItem("userId") || "default-user";
-      const formData: HistoryFormData = {
-        date: values.date.format("YYYY-MM-DD"),
-        mealType: values.mealType,
-        foodItems: values.foodItems,
-        calories: values.calories,
-        notes: values.notes,
-      };
-
-      if (editingRecord) {
-        await updateDietHistory(editingRecord.id, formData);
-        message.success("更新成功");
-      } else {
-        await addDietHistory(userId, formData);
-        message.success("添加成功");
-      }
-
-      setModalVisible(false);
-      loadHistory();
-    } catch (error) {
-      console.error("Error saving history:", error);
-      message.error(editingRecord ? "更新失败" : "添加失败");
-    }
+  const handleEditSuccess = () => {
+    setEditModalVisible(false);
+    setEditingRecord(null);
+    loadHistory();
   };
 
   const getMealTypeLabel = (mealType: string) => {
@@ -142,7 +128,7 @@ const HistoryList: React.FC = () => {
 
   const getMealTypeColor = (mealType: string) => {
     const colors: { [key: string]: string } = {
-      breakfast: "gold",
+      breakfast: "orange",
       lunch: "blue",
       dinner: "purple",
       snack: "cyan",
@@ -151,16 +137,16 @@ const HistoryList: React.FC = () => {
   };
 
   // 按日期分组
-  const groupedHistory = history.reduce(
-    (groups: { [key: string]: DietHistory[] }, record) => {
-      const date = record.date;
+  const groupedHistory = filteredHistory.reduce(
+    (groups: { [key: string]: DietEntry[] }, record) => {
+      const date = dayjs(record.dateAttempted).format("YYYY-MM-DD");
       if (!groups[date]) {
         groups[date] = [];
       }
       groups[date].push(record);
       return groups;
     },
-    {},
+    {}
   );
 
   if (loading) {
@@ -175,23 +161,61 @@ const HistoryList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">饮食记录</h1>
-          <p className="text-gray-600 mt-1">记录您的每日饮食，跟踪健康目标</p>
+          <h1 className="text-2xl font-bold text-gray-900">饮食历史</h1>
+          <p className="text-gray-600 mt-1">
+            查看您的饮食记录，跟踪健康目标达成情况
+          </p>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          添加记录
-        </Button>
+        <div className="text-sm text-gray-500">
+          共 {filteredHistory.length} 条记录
+        </div>
       </div>
+
+      {/* 过滤器 */}
+      <Card className="shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              餐次筛选
+            </label>
+            <Select
+              value={currentMealTypeFilter}
+              onChange={setCurrentMealTypeFilter}
+              style={{ width: "100%" }}
+              options={[
+                { label: "全部餐次", value: "all" },
+                { label: "早餐", value: "breakfast" },
+                { label: "午餐", value: "lunch" },
+                { label: "晚餐", value: "dinner" },
+                { label: "加餐", value: "snack" },
+              ]}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              日期范围
+            </label>
+            <DatePicker.RangePicker
+              style={{ width: "100%" }}
+              value={dateRangeFilter}
+              onChange={(dates) => setDateRangeFilter(dates || [null, null])}
+              placeholder={["开始日期", "结束日期"]}
+            />
+          </div>
+        </div>
+      </Card>
 
       {Object.keys(groupedHistory).length === 0 ? (
         <div className="text-center py-12">
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="暂无饮食记录"
+            description="暂无符合条件的饮食记录"
           >
-            <Button type="primary" onClick={handleAdd}>
-              添加第一条记录
-            </Button>
+            <p className="text-gray-500 mb-4">
+              {history.length === 0
+                ? "您还没有任何饮食记录，可以从推荐页面添加喜欢的菜谱到历史记录"
+                : "尝试调整筛选条件查看更多记录"}
+            </p>
           </Empty>
         </div>
       ) : (
@@ -230,43 +254,77 @@ const HistoryList: React.FC = () => {
                       >
                         编辑
                       </Button>,
-                      <Button
+                      <Popconfirm
                         key="delete"
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => {
-                          Modal.confirm({
-                            title: "确认删除",
-                            content: "确定要删除这条饮食记录吗？",
-                            onOk: () => handleDelete(record.id),
-                          });
-                        }}
+                        title="确认删除"
+                        description="确定要删除这条饮食记录吗？"
+                        onConfirm={() => handleDelete(record.id || "")}
+                        okText="确定"
+                        cancelText="取消"
                       >
-                        删除
-                      </Button>,
+                        <Button type="text" danger icon={<DeleteOutlined />}>
+                          删除
+                        </Button>
+                      </Popconfirm>,
                     ]}
                   >
                     <List.Item.Meta
                       title={
-                        <div className="flex items-center space-x-2">
-                          <Tag color={getMealTypeColor(record.mealType)}>
-                            {getMealTypeLabel(record.mealType)}
-                          </Tag>
-                          <span className="font-medium">
-                            饮食记录
-                          </span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Tag color={getMealTypeColor(record.mealType)}>
+                              {getMealTypeLabel(record.mealType)}
+                            </Tag>
+                            <span className="font-medium text-gray-900">
+                              饮食记录 - {record.dietItemId.slice(-6)}
+                            </span>
+                            {record.wasPrepared && (
+                              <Tag color="green">已制作</Tag>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {record.rating && record.rating > 0 && (
+                              <div className="flex items-center">
+                                <Rate
+                                  disabled
+                                  value={record.rating}
+                                  style={{ fontSize: 12 }}
+                                />
+                                <span className="text-xs text-gray-500 ml-1">
+                                  {record.rating}分
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-xs text-gray-500 flex items-center">
+                              <ClockCircleOutlined className="mr-1" />
+                              {dayjs(record.dateAttempted).format("HH:mm")}
+                            </span>
+                          </div>
                         </div>
                       }
                       description={
-                        <div className="text-sm text-gray-600">
+                        <div className="mt-2">
                           {record.notes && (
-                            <div className="mb-1">备注: {record.notes}</div>
+                            <div className="text-sm text-gray-700 mb-2 p-2 bg-gray-50 rounded">
+                              <strong>备注:</strong> {record.notes}
+                            </div>
                           )}
-                          <div className="text-xs text-gray-400">
-                            尝试时间: {dayjs(record.dateAttempted).format("HH:mm")}
-                            {record.updatedAt && record.updatedAt !== record.createdAt &&
-                              ` (更新于 ${dayjs(record.updatedAt).format("HH:mm")})`}
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>
+                              创建时间:{" "}
+                              {dayjs(record.createdAt).format(
+                                "YYYY-MM-DD HH:mm"
+                              )}
+                            </span>
+                            {record.updatedAt &&
+                              record.updatedAt !== record.createdAt && (
+                                <span>
+                                  最后更新:{" "}
+                                  {dayjs(record.updatedAt).format(
+                                    "MM-DD HH:mm"
+                                  )}
+                                </span>
+                              )}
                           </div>
                         </div>
                       }
@@ -279,79 +337,16 @@ const HistoryList: React.FC = () => {
         </div>
       )}
 
-      <Modal
-        title={editingRecord ? "编辑饮食记录" : "添加饮食记录"}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        width={600}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          className="mt-4"
-        >
-          <Form.Item
-            name="date"
-            label="日期"
-            rules={[{ required: true, message: "请选择日期" }]}
-          >
-            <DatePicker className="w-full" />
-          </Form.Item>
-
-          <Form.Item
-            name="mealType"
-            label="餐次"
-            rules={[{ required: true, message: "请选择餐次" }]}
-          >
-            <Select>
-              <Option value="breakfast">早餐</Option>
-              <Option value="lunch">午餐</Option>
-              <Option value="dinner">晚餐</Option>
-              <Option value="snack">加餐</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="foodItems"
-            label="食物内容"
-            rules={[{ required: true, message: "请输入食物内容" }]}
-          >
-            <TextArea placeholder="例如：白米饭、炒青菜、红烧肉..." rows={3} />
-          </Form.Item>
-
-          <Form.Item
-            name="calories"
-            label="卡路里"
-            rules={[{ required: true, message: "请输入卡路里" }]}
-          >
-            <InputNumber
-              min={0}
-              max={5000}
-              placeholder="估算的卡路里数值"
-              className="w-full"
-              addonAfter="kcal"
-            />
-          </Form.Item>
-
-          <Form.Item name="notes" label="备注">
-            <TextArea
-              placeholder="可选，记录口感、心情或其他想法..."
-              rows={2}
-            />
-          </Form.Item>
-
-          <Form.Item className="mb-0 text-right">
-            <Space>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
-              <Button type="primary" htmlType="submit">
-                {editingRecord ? "更新" : "添加"}
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* 编辑模态框 */}
+      <HistoryEditModal
+        visible={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setEditingRecord(null);
+        }}
+        entry={editingRecord}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 };

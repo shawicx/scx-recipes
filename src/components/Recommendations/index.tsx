@@ -1,7 +1,3 @@
-import React from "react";
+import RecommendationList from "./RecommendationList";
 
-const Recommendations: React.FC = () => {
-  return <div className=""></div>;
-};
-
-export default Recommendations;
+export default RecommendationList;
