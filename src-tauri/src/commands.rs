@@ -242,16 +242,23 @@ pub async fn get_recommendations(
     let timer = crate::utils::performance::PerformanceTimer::start("get_recommendations");
 
     // Get the user's health profile to generate personalized recommendations
-    let profile = db
+    let profile_result = db
         .get_health_profile(&user_id)
         .map_err(|e| {
             log::error!("Failed to get health profile for user {}: {}", user_id, e);
             e.to_string()
-        })?
-        .ok_or_else(|| {
-            log::warn!("Health profile not found for user: {}", user_id);
-            "Health profile not found for the user".to_string()
         })?;
+    
+    let profile = match profile_result {
+        Some(profile) => {
+            log::info!("Found health profile for user {}, generating personalized recommendations", user_id);
+            Some(profile)
+        }
+        None => {
+            log::info!("No health profile found for user {}, generating default recommendations", user_id);
+            None
+        }
+    };
 
     // Load sample recipes or get from database
     let sample_recipes = crate::utils::load_sample_recipes().map_err(|e| {
@@ -265,8 +272,17 @@ pub async fn get_recommendations(
         engine.add_recipe(recipe);
     }
 
-    // Generate recommendations based on the user's profile
-    let recommendations = engine.get_recommendations(&profile);
+    // Generate recommendations based on the user's profile (or default if no profile)
+    let recommendations = match profile {
+        Some(ref user_profile) => {
+            // Generate personalized recommendations
+            engine.get_recommendations(user_profile)
+        }
+        None => {
+            // Generate default recommendations without profile
+            engine.get_default_recommendations(&user_id)
+        }
+    };
 
     let count = recommendations.len();
     let dtos = recommendations

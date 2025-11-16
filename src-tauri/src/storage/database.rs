@@ -186,8 +186,27 @@ impl Database {
 
     pub fn delete_health_profile(&self, user_id: &str) -> AppResult<()> {
         let conn = Connection::open(&self.path)?;
-        conn.execute("DELETE FROM health_profiles WHERE user_id = ?1", [user_id])
-            .map_err(|e| crate::AppError::Database(e.to_string()))?;
+        
+        // Start a transaction to ensure data consistency
+        let tx = conn.unchecked_transaction()
+            .map_err(|e| crate::AppError::Database(format!("Failed to start transaction: {}", e)))?;
+        
+        // First delete all diet history entries for this user
+        tx.execute("DELETE FROM diet_history WHERE user_id = ?1", [user_id])
+            .map_err(|e| crate::AppError::Database(format!("Failed to delete diet history: {}", e)))?;
+        
+        // Then delete all diet recommendations for this user
+        tx.execute("DELETE FROM diet_recommendations WHERE user_id = ?1", [user_id])
+            .map_err(|e| crate::AppError::Database(format!("Failed to delete diet recommendations: {}", e)))?;
+        
+        // Finally delete the health profile
+        tx.execute("DELETE FROM health_profiles WHERE user_id = ?1", [user_id])
+            .map_err(|e| crate::AppError::Database(format!("Failed to delete health profile: {}", e)))?;
+        
+        // Commit the transaction
+        tx.commit()
+            .map_err(|e| crate::AppError::Database(format!("Failed to commit transaction: {}", e)))?;
+        
         Ok(())
     }
 

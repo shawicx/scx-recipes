@@ -1,15 +1,5 @@
-import React, { useState, useEffect } from "react";
-import {
-  Card,
-  Button,
-  List,
-  Empty,
-  message,
-  Tag,
-  Select,
-  Space,
-  Modal,
-} from "antd";
+import { useState, useEffect } from "react";
+import { Card, Button, List, message, Tag, Select, Space, Modal } from "antd";
 import {
   HeartOutlined,
   ClockCircleOutlined,
@@ -22,15 +12,13 @@ import { RecommendationItem } from "../../lib/types";
 import RecommendationDetail from "./RecommendationDetail";
 import AddToHistoryModal from "./AddToHistoryModal";
 
-import { useLoadingState } from "../../hooks/useLoadingState";
-
 interface RecommendationListProps {
   mealTypeFilter?: "breakfast" | "lunch" | "dinner" | "snack" | "all";
 }
 
-const RecommendationList: React.FC<RecommendationListProps> = ({
+const RecommendationList = ({
   mealTypeFilter = "all",
-}) => {
+}: RecommendationListProps) => {
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>(
     []
   );
@@ -46,17 +34,24 @@ const RecommendationList: React.FC<RecommendationListProps> = ({
   const [currentMealTypeFilter, setCurrentMealTypeFilter] =
     useState<string>(mealTypeFilter);
 
-  const { loading, execute } = useLoadingState();
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadRecommendations = async () => {
+  const loadRecommendations = async (isRefresh: boolean = false) => {
     try {
       const userId = localStorage.getItem("userId") || "default-user";
-      // await new Promise(resolve => setTimeout(resolve, 5000)); // 模拟网络延迟
+
+      if (isRefresh) {
+        // 刷新时不清除现有数据，只显示刷新状态
+        setRefreshing(true);
+      }
+
       const data = await getRecommendations(userId);
       setRecommendations(data);
     } catch (error) {
       console.error("Error loading recommendations:", error);
       message.error("加载推荐失败，请稍后重试");
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -77,8 +72,7 @@ const RecommendationList: React.FC<RecommendationListProps> = ({
   };
 
   useEffect(() => {
-    execute(loadRecommendations());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadRecommendations(false);
   }, []);
 
   useEffect(() => {
@@ -114,22 +108,6 @@ const RecommendationList: React.FC<RecommendationListProps> = ({
     }
   };
 
-  if (recommendations.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无推荐">
-          <Button
-            type="primary"
-            loading={loading}
-            onClick={() => execute(loadRecommendations())}
-          >
-            获取推荐
-          </Button>
-        </Empty>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -141,11 +119,12 @@ const RecommendationList: React.FC<RecommendationListProps> = ({
         </div>
         <Button
           type="primary"
-          icon={<ReloadOutlined spin={loading} />}
-          onClick={() => execute(loadRecommendations())}
-          loading={loading}
+          icon={<ReloadOutlined spin={refreshing} />}
+          onClick={() => loadRecommendations(true)}
+          loading={refreshing}
+          disabled={refreshing}
         >
-          {loading ? "刷新中..." : "刷新推荐"}
+          {refreshing ? "刷新中..." : "刷新推荐"}
         </Button>
       </div>
 
