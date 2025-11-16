@@ -14,6 +14,10 @@ impl Database {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
         let path_ref = path.as_ref();
         let conn = Connection::open(path_ref)?;
+        
+        // Enable foreign key support
+        conn.execute("PRAGMA foreign_keys = ON", [])?;
+        
         conn.execute(
             "CREATE TABLE IF NOT EXISTS health_profiles (
                 id TEXT PRIMARY KEY,
@@ -53,22 +57,86 @@ impl Database {
             [],
         )?;
 
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS diet_history (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                diet_item_id TEXT NOT NULL,
-                date_attempted TEXT NOT NULL,
-                rating INTEGER,
-                notes TEXT,
-                was_prepared BOOLEAN NOT NULL,
-                meal_type TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES health_profiles (user_id)
-            )",
-            [],
-        )?;
+        // Check if diet_history table exists and needs migration
+        let mut table_exists = false;
+        let mut has_foreign_key = false;
+        
+        // Check if table exists
+        let table_check = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='diet_history'");
+        if let Ok(mut stmt) = table_check {
+            if let Ok(rows) = stmt.query_map([], |_row| Ok(())) {
+                table_exists = rows.count() > 0;
+            }
+        }
+        
+        if table_exists {
+            // Check if foreign key constraint exists
+            let pragma_check = conn.prepare("PRAGMA foreign_key_list(diet_history)");
+            if let Ok(mut stmt) = pragma_check {
+                if let Ok(rows) = stmt.query_map([], |_row| Ok(())) {
+                    has_foreign_key = rows.count() > 0;
+                }
+            }
+            
+            if has_foreign_key {
+                // Need to migrate: recreate table without foreign key
+                println!("Migrating diet_history table to remove foreign key constraint...");
+                
+                // Start transaction
+                let tx = conn.unchecked_transaction()?;
+                
+                // Create new table without foreign key
+                tx.execute(
+                    "CREATE TABLE diet_history_new (
+                        id TEXT PRIMARY KEY,
+                        user_id TEXT NOT NULL,
+                        diet_item_id TEXT NOT NULL,
+                        date_attempted TEXT NOT NULL,
+                        rating INTEGER,
+                        notes TEXT,
+                        was_prepared BOOLEAN NOT NULL,
+                        meal_type TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL
+                    )",
+                    [],
+                )?;
+                
+                // Copy data from old table to new table
+                tx.execute(
+                    "INSERT INTO diet_history_new SELECT * FROM diet_history",
+                    [],
+                )?;
+                
+                // Drop old table
+                tx.execute("DROP TABLE diet_history", [])?;
+                
+                // Rename new table
+                tx.execute("ALTER TABLE diet_history_new RENAME TO diet_history", [])?;
+                
+                // Commit transaction
+                tx.commit()?;
+                
+                println!("Successfully migrated diet_history table");
+            }
+        } else {
+            // Create new table without foreign key
+            conn.execute(
+                "CREATE TABLE diet_history (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    diet_item_id TEXT NOT NULL,
+                    date_attempted TEXT NOT NULL,
+                    rating INTEGER,
+                    notes TEXT,
+                    was_prepared BOOLEAN NOT NULL,
+                    meal_type TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )",
+                [],
+            )?;
+        }
 
         conn.execute(
             "CREATE TABLE IF NOT EXISTS recipes (

@@ -41,14 +41,13 @@ const AddToHistoryModal: React.FC<AddToHistoryModalProps> = ({
       await logDietEntry({
         userId,
         dietItemId: recommendation.id,
-        dateAttempted: values.dateAttempted.toISOString(),
-        rating: values.rating,
-        notes: values.notes,
+        dateAttempted: values.dateAttempted.format("YYYY-MM-DD"), // 后端期望YYYY-MM-DD格式
+        rating: values.rating || undefined,
+        notes: values.notes || undefined,
         wasPrepared: values.wasPrepared === "yes",
         mealType: values.mealType || recommendation.mealType,
       });
 
-      message.success("已成功添加到饮食历史");
       form.resetFields();
       onSuccess();
     } catch (error) {
