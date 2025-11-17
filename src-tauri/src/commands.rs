@@ -515,6 +515,24 @@ pub fn update_diet_entry(
 }
 
 #[tauri::command]
+pub fn delete_diet_entry(
+    id: String,
+    db: tauri::State<'_, Arc<Database>>,
+) -> Result<bool, String> {
+    log::info!("Deleting diet entry with id: {}", id);
+    
+    db.delete_diet_entry(&id)
+        .map_err(|e| {
+            log::error!("Failed to delete diet entry {}: {}", id, e);
+            e.to_string()
+        })
+        .map(|_| {
+            log::info!("Successfully deleted diet entry: {}", id);
+            true
+        })
+}
+
+#[tauri::command]
 pub fn get_recipe_by_id(
     id: String,
     db: tauri::State<'_, Arc<Database>>,

@@ -579,6 +579,21 @@ impl Database {
         Ok(())
     }
 
+    pub fn delete_diet_entry(&self, id: &str) -> AppResult<()> {
+        let conn = Connection::open(&self.path)?;
+        
+        let rows_affected = conn.execute(
+            "DELETE FROM diet_history WHERE id = ?1",
+            [id],
+        ).map_err(|e| crate::AppError::Database(e.to_string()))?;
+
+        if rows_affected == 0 {
+            return Err(crate::AppError::Database(format!("Diet entry with id {} not found", id)));
+        }
+
+        Ok(())
+    }
+
     // Recipe operations
     pub fn get_recipe_by_id(&self, id: &str) -> AppResult<Option<Recipe>> {
         let conn = Connection::open(&self.path)?;

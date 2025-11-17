@@ -79,6 +79,7 @@ pub fn run() {
             commands::log_diet_entry,
             commands::get_diet_history,
             commands::update_diet_entry,
+            commands::delete_diet_entry,
             commands::get_recipe_by_id,
             commands::search_recipes,
             commands::get_config,

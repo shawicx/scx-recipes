@@ -18,7 +18,7 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
-import { getDietHistory } from "../../lib/api";
+import { getDietHistory, deleteDietEntry } from "../../lib/api";
 import { DietEntry } from "../../lib/types";
 import dayjs from "dayjs";
 import HistoryEditModal from "./HistoryEditModal";
@@ -99,11 +99,9 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
   const handleDelete = async (id: string) => {
     try {
-      // Note: We need to implement delete functionality in API
-      // await deleteDietEntry(id);
-      console.warn("Delete functionality not yet implemented", id);
-      message.warning("删除功能暂未实现");
-      // loadHistory();
+      await deleteDietEntry(id);
+      message.success("删除成功");
+      loadHistory();
     } catch (error) {
       console.error("Error deleting history:", error);
       message.error("删除失败");

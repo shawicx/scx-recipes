@@ -12,7 +12,7 @@ import {
 
 // Health Profile Commands
 export const saveHealthProfile = async (
-  profile: HealthProfile,
+  profile: HealthProfile
 ): Promise<string> => {
   // 将前端的驼峰命名转换为后端期望的下划线命名
   const profileDto = {
@@ -35,7 +35,7 @@ export const saveHealthProfile = async (
 };
 
 export const getHealthProfile = async (
-  userId: string,
+  userId: string
 ): Promise<HealthProfile | null> => {
   const result: any = await invoke("get_health_profile", { userId });
 
@@ -68,7 +68,7 @@ export const deleteHealthProfile = async (userId: string): Promise<boolean> => {
 
 // Recommendation Commands
 export const getRecommendations = async (
-  userId: string,
+  userId: string
 ): Promise<RecommendationItem[]> => {
   const result: any[] = await invoke("get_recommendations", { userId });
 
@@ -97,7 +97,7 @@ export const getRecommendations = async (
 };
 
 export const getRecommendationById = async (
-  id: string,
+  id: string
 ): Promise<RecommendationItem | null> => {
   return await invoke("get_recommendation_by_id", { id });
 };
@@ -122,7 +122,7 @@ export const logDietEntry = async (entry: DietEntry): Promise<string> => {
 };
 
 export const getDietHistory = async (
-  params: GetHistoryParams,
+  params: GetHistoryParams
 ): Promise<DietEntry[]> => {
   // 转换参数字段名
   const paramsDto = {
@@ -152,7 +152,7 @@ export const getDietHistory = async (
 };
 
 export const getDietHistoryCount = async (
-  params: GetHistoryParams,
+  params: GetHistoryParams
 ): Promise<number> => {
   // 转换参数字段名
   const paramsDto = {
@@ -167,7 +167,7 @@ export const getDietHistoryCount = async (
   } catch (error) {
     // 如果命令不存在，使用降级方案：获取所有数据并计算长度
     console.warn(
-      "get_diet_history_count command not found, using fallback method",
+      "get_diet_history_count command not found, using fallback method"
     );
     try {
       const fallbackParamsDto = {
@@ -187,9 +187,13 @@ export const getDietHistoryCount = async (
 };
 
 export const updateDietEntry = async (
-  params: UpdateDietEntryParams,
+  params: UpdateDietEntryParams
 ): Promise<boolean> => {
   return await invoke("update_diet_entry", { params });
+};
+
+export const deleteDietEntry = async (id: string): Promise<boolean> => {
+  return await invoke("delete_diet_entry", { id });
 };
 
 // Recipe Commands
@@ -198,7 +202,7 @@ export const getRecipeById = async (id: string): Promise<Recipe | null> => {
 };
 
 export const searchRecipes = async (
-  params: SearchRecipesParams,
+  params: SearchRecipesParams
 ): Promise<Recipe[]> => {
   return await invoke("search_recipes", { params });
 };
