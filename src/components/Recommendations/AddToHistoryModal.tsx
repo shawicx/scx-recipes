@@ -131,7 +131,7 @@ const AddToHistoryModal: React.FC<AddToHistoryModalProps> = ({
               label="评分"
               help="如果您已经尝试过这道菜，请给出评分"
             >
-              <Rate allowHalf style={{ fontSize: 24 }} character="⭐" />
+              <Rate allowHalf style={{ fontSize: 24 }} allowClear />
             </Form.Item>
 
             <Form.Item name="notes" label="备注">

@@ -56,8 +56,10 @@ const HistoryEditModal: React.FC<HistoryEditModalProps> = ({
 
   React.useEffect(() => {
     if (entry && visible) {
+      const initialRating =
+        entry.rating && entry.rating > 0 ? entry.rating : undefined;
       form.setFieldsValue({
-        rating: entry.rating || 0,
+        rating: initialRating,
         notes: entry.notes || "",
         wasPrepared: entry.wasPrepared,
       });
@@ -90,7 +92,7 @@ const HistoryEditModal: React.FC<HistoryEditModalProps> = ({
 
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Form.Item name="rating" label="评分" help="对这次饮食的满意度评分">
-              <Rate allowHalf style={{ fontSize: 24 }} character="⭐" />
+              <Rate allowHalf allowClear />
             </Form.Item>
 
             <Form.Item name="notes" label="备注">
