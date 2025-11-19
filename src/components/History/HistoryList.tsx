@@ -50,6 +50,11 @@ const HistoryList: React.FC<HistoryListProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history, currentMealTypeFilter, dateRangeFilter]);
 
+  // Sync prop changes with internal state
+  useEffect(() => {
+    setCurrentMealTypeFilter(mealTypeFilter);
+  }, [mealTypeFilter]);
+
   const loadHistory = async () => {
     try {
       setLoading(true);
@@ -75,7 +80,8 @@ const HistoryList: React.FC<HistoryListProps> = ({
     // 餐次过滤
     if (currentMealTypeFilter !== "all") {
       filtered = filtered.filter(
-        (entry) => entry.mealType === currentMealTypeFilter
+        (entry) =>
+          entry.mealType?.toLowerCase() === currentMealTypeFilter?.toLowerCase()
       );
     }
 
@@ -85,7 +91,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
       const endDate = dateRangeFilter[1].endOf("day");
       filtered = filtered.filter((entry) => {
         const entryDate = dayjs(entry.dateAttempted);
-        return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
+        return !entryDate.isBefore(startDate) && !entryDate.isAfter(endDate);
       });
     }
 
