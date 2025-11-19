@@ -88,7 +88,7 @@ pub struct GetHistoryParamsDto {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateDietEntryParamsDto {
     pub id: String,
-    pub rating: Option<u8>,
+    pub rating: Option<f32>,
     pub notes: Option<String>,
     pub was_prepared: Option<bool>,
 }
@@ -509,7 +509,10 @@ pub fn update_diet_entry(
     params: UpdateDietEntryParamsDto,
     db: tauri::State<'_, Arc<Database>>,
 ) -> Result<bool, String> {
-    db.update_diet_entry(&params.id, params.rating, params.notes, params.was_prepared)
+    // Convert the rating from Option<f32> to Option<u8>
+    let rating_int = params.rating.map(|r| r as u8);
+
+    db.update_diet_entry(&params.id, rating_int, params.notes, params.was_prepared)
         .map_err(|e| e.to_string())
         .map(|_| true)
 }

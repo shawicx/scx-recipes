@@ -99,6 +99,9 @@ const AddToHistoryModal: React.FC<AddToHistoryModalProps> = ({
                 style={{ width: "100%" }}
                 format="YYYY-MM-DD"
                 placeholder="选择日期"
+                disabledDate={(current) =>
+                  current && current > dayjs().endOf("day")
+                }
               />
             </Form.Item>
 
