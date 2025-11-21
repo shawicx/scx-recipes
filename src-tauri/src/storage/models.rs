@@ -380,3 +380,114 @@ mod tests {
         assert!(recipe.validate().is_err());
     }
 }
+
+/// 餐厅信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Restaurant {
+    pub id: String,
+    pub name: String,
+    pub address: String,
+    pub latitude: f64,
+    pub longitude: f64,
+    pub cuisine_type: String, // 菜系类型：川菜、粤菜、日料等
+    pub price_range: PriceRange,
+    pub rating: Option<f32>,
+    pub phone: Option<String>,
+    pub opening_hours: Option<String>,
+    pub features: Vec<String>,    // 特色：外卖、堂食、包厢等
+    pub distance_km: Option<f64>, // 距离用户的距离
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// 价格范围
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum PriceRange {
+    Budget,   // 经济型 (￥)
+    Moderate, // 中等价位 (￥￥)
+    Upscale,  // 高档 (￥￥￥)
+    Luxury,   // 豪华 (￥￥￥￥)
+}
+
+/// 外卖服务
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeliveryService {
+    pub id: String,
+    pub restaurant_id: String,
+    pub platform: String, // 美团、饿了么、自营等
+    pub delivery_fee: f32,
+    pub minimum_order: f32,
+    pub estimated_time: u32, // 配送时间（分钟）
+    pub available: bool,
+    pub coverage_radius_km: f32, // 配送覆盖半径
+}
+
+/// 食材商店
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IngredientStore {
+    pub id: String,
+    pub name: String,
+    pub store_type: StoreType,
+    pub address: String,
+    pub latitude: f64,
+    pub longitude: f64,
+    pub phone: Option<String>,
+    pub opening_hours: Option<String>,
+    pub available_ingredients: Vec<String>, // 可购买的食材类型
+    pub price_level: PriceLevel,
+    pub distance_km: Option<f64>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// 商店类型
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum StoreType {
+    Supermarket,    // 超市
+    Market,         // 菜市场
+    SpecialtyStore, // 专门店（如海鲜店、肉店）
+    OnlineGrocery,  // 线上生鲜
+}
+
+/// 价格水平
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum PriceLevel {
+    Low,    // 便宜
+    Medium, // 中等
+    High,   // 较贵
+}
+
+/// 用户位置偏好
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocationPreference {
+    pub user_id: String,
+    pub home_latitude: Option<f64>,
+    pub home_longitude: Option<f64>,
+    pub work_latitude: Option<f64>,
+    pub work_longitude: Option<f64>,
+    pub preferred_search_radius_km: f32, // 默认搜索半径
+    pub preferred_cuisine_types: Vec<String>,
+    pub preferred_price_range: Option<PriceRange>,
+    pub delivery_preference: bool, // 是否偏好外卖
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// LBS 推荐结果
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LbsRecommendation {
+    pub id: String,
+    pub user_id: String,
+    pub recommendation_type: LbsRecommendationType,
+    pub location: crate::location::Location,
+    pub restaurants: Vec<Restaurant>,
+    pub delivery_options: Vec<DeliveryService>,
+    pub ingredient_stores: Vec<IngredientStore>,
+    pub generated_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// LBS 推荐类型
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum LbsRecommendationType {
+    DineOut,        // 外出就餐
+    OrderDelivery,  // 点外卖
+    BuyIngredients, // 购买食材自制
+    Mixed,          // 混合推荐
+}

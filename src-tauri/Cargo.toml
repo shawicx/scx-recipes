@@ -26,3 +26,6 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 chrono = { version = "0.4.23", features = ["serde"] }
 log = "0.4"
 env_logger = "0.10"
+reqwest = { version = "0.11", features = ["json"] }
+geojson = "0.24"
+thiserror = "1.0"

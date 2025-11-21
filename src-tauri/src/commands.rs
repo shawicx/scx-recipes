@@ -242,20 +242,24 @@ pub async fn get_recommendations(
     let timer = crate::utils::performance::PerformanceTimer::start("get_recommendations");
 
     // Get the user's health profile to generate personalized recommendations
-    let profile_result = db
-        .get_health_profile(&user_id)
-        .map_err(|e| {
-            log::error!("Failed to get health profile for user {}: {}", user_id, e);
-            e.to_string()
-        })?;
-    
+    let profile_result = db.get_health_profile(&user_id).map_err(|e| {
+        log::error!("Failed to get health profile for user {}: {}", user_id, e);
+        e.to_string()
+    })?;
+
     let profile = match profile_result {
         Some(profile) => {
-            log::info!("Found health profile for user {}, generating personalized recommendations", user_id);
+            log::info!(
+                "Found health profile for user {}, generating personalized recommendations",
+                user_id
+            );
             Some(profile)
         }
         None => {
-            log::info!("No health profile found for user {}, generating default recommendations", user_id);
+            log::info!(
+                "No health profile found for user {}, generating default recommendations",
+                user_id
+            );
             None
         }
     };
@@ -518,12 +522,9 @@ pub fn update_diet_entry(
 }
 
 #[tauri::command]
-pub fn delete_diet_entry(
-    id: String,
-    db: tauri::State<'_, Arc<Database>>,
-) -> Result<bool, String> {
+pub fn delete_diet_entry(id: String, db: tauri::State<'_, Arc<Database>>) -> Result<bool, String> {
     log::info!("Deleting diet entry with id: {}", id);
-    
+
     db.delete_diet_entry(&id)
         .map_err(|e| {
             log::error!("Failed to delete diet entry {}: {}", id, e);
@@ -533,6 +534,200 @@ pub fn delete_diet_entry(
             log::info!("Successfully deleted diet entry: {}", id);
             true
         })
+}
+
+// ===== 地理位置服务命令 =====
+
+#[derive(serde::Deserialize)]
+pub struct LocationDto {
+    latitude: f64,
+    longitude: f64,
+}
+
+/// 获取用户地理位置
+#[tauri::command]
+pub async fn get_user_location() -> Result<crate::location::LocationInfo, String> {
+    log::info!("Getting user location");
+
+    let location_service = crate::location::LocationService::new();
+
+    location_service.get_location().await.map_err(|e| {
+        log::error!("Failed to get user location: {}", e);
+        e.to_string()
+    })
+}
+
+/// 搜索附近餐厅
+#[tauri::command]
+pub async fn search_nearby_restaurants(
+    location: LocationDto,
+    radius_km: Option<f64>,
+    cuisine_types: Option<Vec<String>>,
+    max_results: Option<usize>,
+) -> Result<Vec<crate::storage::models::Restaurant>, String> {
+    log::info!(
+        "Searching nearby restaurants at ({}, {})",
+        location.latitude,
+        location.longitude
+    );
+
+    let finder = crate::location::restaurant_finder::RestaurantFinder::default();
+
+    let search_params = crate::location::restaurant_finder::RestaurantSearchParams {
+        location: crate::location::Location {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            accuracy: None,
+            source: crate::location::LocationSource::GPS,
+            timestamp: chrono::Utc::now(),
+        },
+        radius_km: radius_km.unwrap_or(5.0),
+        cuisine_types,
+        price_ranges: None,
+        min_rating: Some(3.0),
+        max_results: max_results.unwrap_or(10),
+    };
+
+    finder
+        .find_nearby_restaurants(&search_params)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 搜索外卖服务
+#[tauri::command]
+pub async fn search_delivery_options(
+    location: LocationDto,
+    max_delivery_time: Option<u32>,
+    max_delivery_fee: Option<f32>,
+    max_results: Option<usize>,
+) -> Result<
+    Vec<(
+        crate::storage::models::Restaurant,
+        crate::storage::models::DeliveryService,
+    )>,
+    String,
+> {
+    log::info!(
+        "Searching delivery options at ({}, {})",
+        location.latitude,
+        location.longitude
+    );
+
+    let finder = crate::location::delivery_service::DeliveryServiceFinder::default();
+
+    let search_params = crate::location::delivery_service::DeliverySearchParams {
+        location: crate::location::Location {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            accuracy: None,
+            source: crate::location::LocationSource::GPS,
+            timestamp: chrono::Utc::now(),
+        },
+        max_delivery_time,
+        max_delivery_fee,
+        min_order_amount: None,
+        platforms: None,
+        max_results: max_results.unwrap_or(8),
+    };
+
+    finder
+        .find_available_delivery(&search_params)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 搜索食材商店
+#[tauri::command]
+pub async fn search_ingredient_stores(
+    location: LocationDto,
+    radius_km: Option<f64>,
+    required_ingredients: Option<Vec<String>>,
+    max_results: Option<usize>,
+) -> Result<Vec<crate::storage::models::IngredientStore>, String> {
+    log::info!(
+        "Searching ingredient stores at ({}, {})",
+        location.latitude,
+        location.longitude
+    );
+
+    let finder = crate::location::ingredient_store::IngredientStoreFinder::default();
+
+    let search_params = crate::location::ingredient_store::IngredientSearchParams {
+        location: crate::location::Location {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            accuracy: None,
+            source: crate::location::LocationSource::GPS,
+            timestamp: chrono::Utc::now(),
+        },
+        radius_km: radius_km.unwrap_or(5.0),
+        store_types: None,
+        price_levels: None,
+        required_ingredients,
+        max_results: max_results.unwrap_or(10),
+    };
+
+    finder
+        .find_nearby_stores(&search_params)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 生成购物清单
+#[tauri::command]
+pub async fn generate_shopping_list(
+    location: LocationDto,
+    recipe_ingredients: Vec<crate::storage::models::Ingredient>,
+) -> Result<crate::location::ingredient_store::ShoppingList, String> {
+    log::info!(
+        "Generating shopping list for {} ingredients",
+        recipe_ingredients.len()
+    );
+
+    let finder = crate::location::ingredient_store::IngredientStoreFinder::default();
+
+    let user_location = crate::location::Location {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: None,
+        source: crate::location::LocationSource::GPS,
+        timestamp: chrono::Utc::now(),
+    };
+
+    finder
+        .generate_shopping_list(&user_location, &recipe_ingredients)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 获取快速外卖推荐
+#[tauri::command]
+pub async fn get_quick_delivery(
+    location: LocationDto,
+) -> Result<
+    Vec<(
+        crate::storage::models::Restaurant,
+        crate::storage::models::DeliveryService,
+    )>,
+    String,
+> {
+    log::info!("Getting quick delivery options");
+
+    let finder = crate::location::delivery_service::DeliveryServiceFinder::default();
+
+    let user_location = crate::location::Location {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: None,
+        source: crate::location::LocationSource::GPS,
+        timestamp: chrono::Utc::now(),
+    };
+
+    finder
+        .get_quick_delivery(&user_location)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -653,16 +848,15 @@ pub fn get_config() -> Result<AppConfigDto, String> {
 #[tauri::command]
 pub fn set_config(config: AppConfigDto) -> Result<bool, String> {
     log::info!("Updating application configuration");
-    
+
     // Update the configuration
-    crate::config::update_app_config(
-        Some(config.privacy_mode),
-        Some(config.theme),
-    ).map_err(|e| {
-        log::error!("Failed to update application configuration: {}", e);
-        e.to_string()
-    })?;
-    
+    crate::config::update_app_config(Some(config.privacy_mode), Some(config.theme)).map_err(
+        |e| {
+            log::error!("Failed to update application configuration: {}", e);
+            e.to_string()
+        },
+    )?;
+
     log::info!("Successfully updated application configuration");
     Ok(true)
 }

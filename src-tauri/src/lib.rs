@@ -5,6 +5,7 @@ use tauri::Manager;
 
 mod commands;
 mod config;
+mod location;
 mod recommendation;
 mod storage;
 mod utils;
@@ -16,6 +17,8 @@ pub enum AppError {
     Database(String),
     Validation(String),
     NotFound(String),
+    Network(String),
+    Location(String),
 }
 
 impl std::fmt::Display for AppError {
@@ -24,6 +27,8 @@ impl std::fmt::Display for AppError {
             AppError::Database(msg) => write!(f, "Database error: {}", msg),
             AppError::Validation(msg) => write!(f, "Validation error: {}", msg),
             AppError::NotFound(msg) => write!(f, "Not found: {}", msg),
+            AppError::Network(msg) => write!(f, "Network error: {}", msg),
+            AppError::Location(msg) => write!(f, "Location error: {}", msg),
         }
     }
 }
@@ -84,6 +89,12 @@ pub fn run() {
             commands::search_recipes,
             commands::get_config,
             commands::set_config,
+            commands::get_user_location,
+            commands::search_nearby_restaurants,
+            commands::search_delivery_options,
+            commands::search_ingredient_stores,
+            commands::generate_shopping_list,
+            commands::get_quick_delivery,
         ])
         .setup(|app| {
             // Initialize database with path based on platform
