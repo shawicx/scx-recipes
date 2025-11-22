@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+
+pub mod amap_config;
+pub mod amap_types;
+pub mod amap_client;
 
 pub mod delivery_service;
 pub mod ingredient_store;
@@ -37,25 +40,123 @@ pub struct LocationInfo {
     pub address: Address,
 }
 
+/// 数据源模式
+#[derive(Debug, Clone)]
+pub enum DataSource {
+    Demo,      // 使用示例数据（离线演示）
+    AmapAPI,   // 使用高德地图API（生产环境）
+}
+
 /// 地理位置服务管理器
 pub struct LocationService {
     ip_geolocation_api: String,
+    data_source: DataSource,
+    amap_client: Option<amap_client::AmapClient>,
 }
 
 impl LocationService {
     pub fn new() -> Self {
+        Self::new_with_source(DataSource::Demo)
+    }
+
+    pub fn new_with_source(data_source: DataSource) -> Self {
+        let amap_client = match data_source {
+            DataSource::AmapAPI => {
+                match amap_client::AmapClient::new() {
+                    Ok(client) => {
+                        log::info!("Amap client initialized successfully");
+                        Some(client)
+                    }
+                    Err(e) => {
+                        log::warn!("Failed to initialize Amap client: {}, falling back to demo mode", e);
+                        None
+                    }
+                }
+            }
+            DataSource::Demo => None,
+        };
+
         Self {
-            // 使用免费的IP地理定位服务作为备选
             ip_geolocation_api: "http://ip-api.com/json".to_string(),
+            data_source: if amap_client.is_some() { DataSource::AmapAPI } else { DataSource::Demo },
+            amap_client,
         }
     }
 
+    /// 获取当前使用的数据源
+    pub fn get_data_source(&self) -> &DataSource {
+        &self.data_source
+    }
+
+    /// 检查高德地图API是否可用
+    pub fn is_amap_available(&self) -> bool {
+        self.amap_client.is_some()
+    }
+
     /// 获取用户地理位置
-    /// 首先尝试系统定位，失败则使用IP定位
+    /// 优先使用高德API，失败则使用IP定位备选方案
     pub async fn get_location(&self) -> Result<LocationInfo, crate::AppError> {
-        // 首先尝试系统定位（需要前端权限）
-        // 这里先实现IP定位作为备选方案
-        self.get_location_by_ip().await
+        match &self.amap_client {
+            Some(client) => {
+                log::info!("Using Amap API for location");
+                match client.get_current_location().await {
+                    Ok(location_info) => {
+                        log::info!("Amap location successful: {}, {}", 
+                            location_info.location.latitude, 
+                            location_info.location.longitude
+                        );
+                        Ok(location_info)
+                    }
+                    Err(e) => {
+                        log::warn!("Amap location failed: {}, falling back to IP location", e);
+                        self.get_location_by_ip().await
+                    }
+                }
+            }
+            None => {
+                log::info!("Using IP location (demo mode or Amap unavailable)");
+                self.get_location_by_ip().await
+            }
+        }
+    }
+
+    /// 地理编码：地址转换为坐标
+    pub async fn geocode(&self, address: &str, city: Option<&str>) -> Result<Location, crate::AppError> {
+        match &self.amap_client {
+            Some(client) => {
+                let amap_location = client.geocode(address, city).await?;
+                Ok(amap_location.to_location())
+            }
+            None => {
+                Err(crate::AppError::Location(
+                    "Geocoding requires Amap API (demo mode active)".to_string()
+                ))
+            }
+        }
+    }
+
+    /// 逆地理编码：坐标转换为地址
+    pub async fn reverse_geocode(&self, location: &Location) -> Result<Address, crate::AppError> {
+        match &self.amap_client {
+            Some(client) => {
+                let amap_location = amap_types::AmapLocation::from(location);
+                let response = client.regeocode(&amap_location).await?;
+                
+                Ok(Address {
+                    country: Some("中国".to_string()),
+                    province: Some(response.regeocode.addressComponent.province),
+                    city: Some(response.regeocode.addressComponent.city),
+                    district: Some(response.regeocode.addressComponent.district),
+                    street: Some(response.regeocode.addressComponent.streetNumber.street),
+                    postal_code: Some(response.regeocode.addressComponent.adcode),
+                })
+            }
+            None => {
+                Err(crate::AppError::Location(
+                    "Reverse geocoding requires Amap API (demo mode active)".to_string()
+                ))
+            }
+        }
     }
 
     /// 通过IP地址获取地理位置

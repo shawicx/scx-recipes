@@ -1,0 +1,71 @@
+# 高德地图API配置文件
+# 请在此文件中填入您的API密钥
+
+[amap]
+# 高德地图Web服务API Key
+# 申请地址: https://console.amap.com/dev/key/app
+web_api_key = "7605057fa1957d4f4a61dc213230babe"
+
+# 高德地图Web端(JS API)Key (可选)
+js_api_key = ""
+
+# API基础URL
+base_url = "https://restapi.amap.com"
+
+# 请求超时设置(秒)
+timeout = 10
+
+# 默认城市编码
+default_city = "110000"
+
+[location]
+# 定位精度要求(米)
+accuracy_threshold = 100
+
+# IP定位备用服务
+fallback_ip_service = "http://ip-api.com/json"
+
+# 是否启用缓存
+enable_cache = true
+
+# 缓存过期时间(分钟)
+cache_expire_minutes = 30
+
+[poi_search]
+# POI搜索默认设置
+default_radius = 1000
+max_results = 20
+min_rating = 3.0
+
+# 餐饮类POI分类代码
+restaurant_categories = [
+    "050000",
+    "050100",
+    "050200",
+    "050300",
+    "050400",
+]
+
+# 购物类POI分类代码
+shopping_categories = [
+    "060000",
+    "060100",
+    "060200",
+    "060300",
+]
+
+[delivery]
+# 外卖配送设置
+max_delivery_distance = 5000
+max_delivery_time = 60
+min_order_amount = 0
+
+[rate_limit]
+# API调用频率限制
+requests_per_second = 10
+requests_per_day = 5000
+
+[logging]
+# 日志设置
+enable_api_logging = true
+log_request_details = false

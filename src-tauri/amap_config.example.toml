@@ -1,0 +1,75 @@
+# 高德地图API配置文件示例
+# 请复制此文件为 amap_config.toml 并填入真实的API密钥
+
+[amap]
+# 高德地图Web服务API Key
+# 申请地址: https://console.amap.com/dev/key/app
+web_api_key = "your_web_api_key_here"
+
+# 高德地图Web端(JS API)Key (可选)
+# 用于前端地图显示
+js_api_key = "your_js_api_key_here"
+
+# API基础URL
+base_url = "https://restapi.amap.com"
+
+# 请求超时设置(秒)
+timeout = 10
+
+# 默认城市编码(可选)
+# 北京: 110000, 上海: 310000, 广州: 440100, 深圳: 440300
+default_city = "110000"
+
+[location]
+# 定位精度要求(米)
+accuracy_threshold = 100
+
+# IP定位备用服务(当高德API不可用时)
+fallback_ip_service = "http://ip-api.com/json"
+
+# 是否启用缓存
+enable_cache = true
+
+# 缓存过期时间(分钟)
+cache_expire_minutes = 30
+
+[poi_search]
+# POI搜索默认设置
+default_radius = 1000        # 默认搜索半径(米)
+max_results = 20            # 最大返回结果数
+min_rating = 3.0           # 最低评分要求
+
+# 餐饮类POI分类代码
+restaurant_categories = [
+    "050000",    # 餐饮服务
+    "050100",    # 中餐厅  
+    "050200",    # 外国餐厅
+    "050300",    # 快餐厅
+    "050400",    # 休闲餐饮场所
+]
+
+# 购物类POI分类代码
+shopping_categories = [
+    "060000",    # 购物服务
+    "060100",    # 购物中心
+    "060200",    # 便民商店/便利店
+    "060300",    # 家电电子卖场
+]
+
+[delivery]
+# 外卖配送设置
+max_delivery_distance = 5000    # 最大配送距离(米)
+max_delivery_time = 60          # 最大配送时间(分钟)
+min_order_amount = 0            # 最低起送金额
+
+[rate_limit]
+# API调用频率限制
+requests_per_second = 10
+requests_per_day = 5000
+
+[logging]
+# 是否记录API调用日志
+enable_api_logging = true
+
+# 是否记录详细的请求/响应数据(调试用)
+log_request_details = false
