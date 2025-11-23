@@ -1,7 +1,7 @@
-use super::amap_config::{CONFIG, get_api_key, get_base_url, get_timeout, is_api_logging_enabled};
+use super::amap_config::{get_api_key, get_base_url, get_timeout, is_api_logging_enabled, CONFIG};
 use super::amap_types::{
-    AmapResponse, IpLocationResponse, GeocodingResponse, RegeocodeResponse, 
-    PoiSearchResponse, RouteResponse, AmapLocation
+    AmapLocation, AmapResponse, GeocodingResponse, IpLocationResponse, PoiSearchResponse,
+    RegeocodeResponse, RouteResponse,
 };
 use reqwest::Client;
 use serde_json::Value;
@@ -20,15 +20,17 @@ impl AmapClient {
         let api_key = get_api_key();
         if api_key.is_empty() {
             return Err(crate::AppError::Validation(
-                "Amap API key is not configured".to_string()
+                "Amap API key is not configured".to_string(),
             ));
         }
-        
+
         let client = Client::builder()
             .timeout(Duration::from_secs(get_timeout()))
             .build()
-            .map_err(|e| crate::AppError::Network(format!("Failed to create HTTP client: {}", e)))?;
-            
+            .map_err(|e| {
+                crate::AppError::Network(format!("Failed to create HTTP client: {}", e))
+            })?;
+
         Ok(Self {
             client,
             base_url: get_base_url().to_string(),
@@ -37,7 +39,11 @@ impl AmapClient {
     }
 
     /// 通用API请求方法
-    async fn request<T>(&self, endpoint: &str, params: &[(&str, &str)]) -> Result<T, crate::AppError> 
+    async fn request<T>(
+        &self,
+        endpoint: &str,
+        params: &[(&str, &str)],
+    ) -> Result<T, crate::AppError>
     where
         T: for<'de> serde::Deserialize<'de>,
     {
@@ -49,7 +55,8 @@ impl AmapClient {
             log::info!("Amap API request: {} with params: {:?}", endpoint, params);
         }
 
-        let response = self.client
+        let response = self
+            .client
             .get(&url)
             .query(&query_params)
             .send()
@@ -68,7 +75,8 @@ impl AmapClient {
 
         if !status.is_success() {
             return Err(crate::AppError::Network(format!(
-                "HTTP {} - {}", status, response_text
+                "HTTP {} - {}",
+                status, response_text
             )));
         }
 
@@ -79,7 +87,8 @@ impl AmapClient {
         // 检查API状态
         if api_response.status != "1" {
             return Err(crate::AppError::Location(format!(
-                "Amap API error: {} ({})", api_response.info, api_response.infocode
+                "Amap API error: {} ({})",
+                api_response.info, api_response.infocode
             )));
         }
 
@@ -95,30 +104,30 @@ impl AmapClient {
             params.push(("ip", ip_addr));
         }
 
-        let response: AmapResponse<IpLocationResponse> = self
-            .request("v3/ip", &params)
-            .await?;
+        let response: AmapResponse<IpLocationResponse> = self.request("v3/ip", &params).await?;
 
         // 解析rectangle字段获取中心坐标
         let rectangle = &response.data.rectangle;
         let coords: Vec<&str> = rectangle.split(';').collect();
         if coords.len() != 2 {
             return Err(crate::AppError::Location(
-                "Invalid rectangle format in IP location response".to_string()
+                "Invalid rectangle format in IP location response".to_string(),
             ));
         }
 
         // 取矩形的中心点
-        let start_coords: Vec<f64> = coords[0].split(',')
+        let start_coords: Vec<f64> = coords[0]
+            .split(',')
             .map(|s| s.parse().unwrap_or(0.0))
             .collect();
-        let end_coords: Vec<f64> = coords[1].split(',')
+        let end_coords: Vec<f64> = coords[1]
+            .split(',')
             .map(|s| s.parse().unwrap_or(0.0))
             .collect();
 
         if start_coords.len() != 2 || end_coords.len() != 2 {
             return Err(crate::AppError::Location(
-                "Invalid coordinate format".to_string()
+                "Invalid coordinate format".to_string(),
             ));
         }
 
@@ -129,20 +138,24 @@ impl AmapClient {
     }
 
     /// 地理编码（地址转坐标）
-    pub async fn geocode(&self, address: &str, city: Option<&str>) -> Result<AmapLocation, crate::AppError> {
+    pub async fn geocode(
+        &self,
+        address: &str,
+        city: Option<&str>,
+    ) -> Result<AmapLocation, crate::AppError> {
         let mut params = vec![("address", address)];
         if let Some(city_name) = city {
             params.push(("city", city_name));
         }
 
-        let response: AmapResponse<GeocodingResponse> = self
-            .request("v3/geocode/geo", &params)
-            .await?;
+        let response: AmapResponse<GeocodingResponse> =
+            self.request("v3/geocode/geo", &params).await?;
 
         if response.data.geocodes.is_empty() {
-            return Err(crate::AppError::NotFound(
-                format!("No geocoding result found for address: {}", address)
-            ));
+            return Err(crate::AppError::NotFound(format!(
+                "No geocoding result found for address: {}",
+                address
+            )));
         }
 
         let geocode = &response.data.geocodes[0];
@@ -150,7 +163,10 @@ impl AmapClient {
     }
 
     /// 逆地理编码（坐标转地址）
-    pub async fn regeocode(&self, location: &AmapLocation) -> Result<RegeocodeResponse, crate::AppError> {
+    pub async fn regeocode(
+        &self,
+        location: &AmapLocation,
+    ) -> Result<RegeocodeResponse, crate::AppError> {
         let location_str = location.to_string();
         let params = vec![("location", location_str.as_str())];
 
@@ -166,13 +182,13 @@ impl AmapClient {
         poi_type: Option<&str>,
         city: Option<&str>,
         page_size: Option<u32>,
-        page_num: Option<u32>
+        page_num: Option<u32>,
     ) -> Result<PoiSearchResponse, crate::AppError> {
         let location_str = location.to_string();
         let radius_str = radius.to_string();
         let page_size_str = page_size.unwrap_or(20).to_string();
         let page_num_str = page_num.unwrap_or(1).to_string();
-        
+
         let mut params = vec![
             ("keywords", keywords),
             ("location", &location_str),
@@ -190,9 +206,8 @@ impl AmapClient {
             params.push(("city", city_name));
         }
 
-        let response: AmapResponse<PoiSearchResponse> = self
-            .request("v3/place/text", &params)
-            .await?;
+        let response: AmapResponse<PoiSearchResponse> =
+            self.request("v3/place/text", &params).await?;
 
         Ok(response.data)
     }
@@ -204,12 +219,12 @@ impl AmapClient {
         radius: u32,
         poi_type: &str,
         keywords: Option<&str>,
-        page_size: Option<u32>
+        page_size: Option<u32>,
     ) -> Result<PoiSearchResponse, crate::AppError> {
         let location_str = location.to_string();
         let radius_str = radius.to_string();
         let page_size_str = page_size.unwrap_or(20).to_string();
-        
+
         let mut params = vec![
             ("location", location_str.as_str()),
             ("radius", &radius_str),
@@ -221,9 +236,8 @@ impl AmapClient {
             params.push(("keywords", kw));
         }
 
-        let response: AmapResponse<PoiSearchResponse> = self
-            .request("v3/place/around", &params)
-            .await?;
+        let response: AmapResponse<PoiSearchResponse> =
+            self.request("v3/place/around", &params).await?;
 
         Ok(response.data)
     }
@@ -236,15 +250,14 @@ impl AmapClient {
     ) -> Result<RouteResponse, crate::AppError> {
         let origin_str = origin.to_string();
         let destination_str = destination.to_string();
-        
+
         let params = vec![
             ("origin", origin_str.as_str()),
             ("destination", destination_str.as_str()),
         ];
 
-        let response: AmapResponse<RouteResponse> = self
-            .request("v3/direction/walking", &params)
-            .await?;
+        let response: AmapResponse<RouteResponse> =
+            self.request("v3/direction/walking", &params).await?;
 
         Ok(response.data)
     }
@@ -258,7 +271,7 @@ impl AmapClient {
     ) -> Result<RouteResponse, crate::AppError> {
         let origin_str = origin.to_string();
         let destination_str = destination.to_string();
-        
+
         let mut params = vec![
             ("origin", origin_str.as_str()),
             ("destination", destination_str.as_str()),
@@ -270,15 +283,16 @@ impl AmapClient {
             params.push(("strategy", &strategy_str));
         }
 
-        let response: AmapResponse<RouteResponse> = self
-            .request("v3/direction/driving", &params)
-            .await?;
+        let response: AmapResponse<RouteResponse> =
+            self.request("v3/direction/driving", &params).await?;
 
         Ok(response.data)
     }
 
     /// 获取当前用户位置（优先IP定位）
-    pub async fn get_current_location(&self) -> Result<crate::location::LocationInfo, crate::AppError> {
+    pub async fn get_current_location(
+        &self,
+    ) -> Result<crate::location::LocationInfo, crate::AppError> {
         let amap_location = self.ip_location(None).await?;
         let regeocode_response = self.regeocode(&amap_location).await?;
 
@@ -287,7 +301,13 @@ impl AmapClient {
             province: Some(regeocode_response.regeocode.addressComponent.province),
             city: Some(regeocode_response.regeocode.addressComponent.city),
             district: Some(regeocode_response.regeocode.addressComponent.district),
-            street: Some(regeocode_response.regeocode.addressComponent.streetNumber.street),
+            street: Some(
+                regeocode_response
+                    .regeocode
+                    .addressComponent
+                    .streetNumber
+                    .street,
+            ),
             postal_code: Some(regeocode_response.regeocode.addressComponent.adcode),
         };
 
@@ -316,7 +336,7 @@ mod tests {
     async fn test_ip_location() {
         let client = AmapClient::new().unwrap();
         let location = client.ip_location(None).await.unwrap();
-        
+
         // 验证坐标在合理范围内（中国大陆）
         assert!(location.longitude > 73.0 && location.longitude < 135.0);
         assert!(location.latitude > 18.0 && location.latitude < 54.0);
@@ -334,7 +354,7 @@ mod tests {
     fn test_amap_location() {
         let location = AmapLocation::new(116.397428, 39.90923);
         assert_eq!(location.to_string(), "116.397428,39.90923");
-        
+
         let parsed = AmapLocation::from_string("116.397428,39.90923").unwrap();
         assert_eq!(parsed.longitude, 116.397428);
         assert_eq!(parsed.latitude, 39.90923);

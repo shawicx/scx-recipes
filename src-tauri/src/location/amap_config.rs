@@ -92,23 +92,23 @@ pub static CONFIG: Lazy<AmapConfig> = Lazy::new(|| {
 /// 加载配置文件
 pub fn load_config() -> Result<AmapConfig, crate::AppError> {
     let config_path = "amap_config.toml";
-    
+
     if !Path::new(config_path).exists() {
         return Err(crate::AppError::NotFound(format!(
-            "Config file not found: {}. Please copy from amap_config.example.toml", 
+            "Config file not found: {}. Please copy from amap_config.example.toml",
             config_path
         )));
     }
-    
+
     let config_content = fs::read_to_string(config_path)
         .map_err(|e| crate::AppError::Database(format!("Failed to read config file: {}", e)))?;
-    
+
     let config: AmapConfig = toml::from_str(&config_content)
         .map_err(|e| crate::AppError::Validation(format!("Failed to parse config: {}", e)))?;
-    
+
     // 验证必要的配置
     validate_config(&config)?;
-    
+
     log::info!("Amap config loaded successfully");
     Ok(config)
 }
@@ -120,19 +120,19 @@ fn validate_config(config: &AmapConfig) -> Result<(), crate::AppError> {
             "Amap web_api_key is required".to_string()
         ));
     }
-    
+
     if config.amap.timeout == 0 {
         return Err(crate::AppError::Validation(
             "Timeout must be greater than 0".to_string()
         ));
     }
-    
+
     if config.poi_search.max_results == 0 || config.poi_search.max_results > 100 {
         return Err(crate::AppError::Validation(
             "max_results must be between 1 and 100".to_string()
         ));
     }
-    
+
     Ok(())
 }
 
@@ -234,19 +234,19 @@ mod tests {
     #[test]
     fn test_config_validation() {
         let mut config = get_default_config();
-        
+
         // 测试空API密钥
         config.amap.web_api_key = String::new();
         assert!(validate_config(&config).is_err());
-        
+
         // 测试无效的max_results
         config.amap.web_api_key = "test_key".to_string();
         config.poi_search.max_results = 0;
         assert!(validate_config(&config).is_err());
-        
+
         config.poi_search.max_results = 101;
         assert!(validate_config(&config).is_err());
-        
+
         // 测试有效配置
         config.poi_search.max_results = 20;
         assert!(validate_config(&config).is_ok());

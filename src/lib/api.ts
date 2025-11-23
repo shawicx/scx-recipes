@@ -8,6 +8,11 @@ import {
   Recipe,
   SearchRecipesParams,
   AppConfig,
+  LocationInfo,
+  Restaurant,
+  DeliveryService,
+  IngredientStore,
+  ShoppingList,
 } from "./types";
 
 // Health Profile Commands
@@ -194,6 +199,71 @@ export const updateDietEntry = async (
 
 export const deleteDietEntry = async (id: string): Promise<boolean> => {
   return await invoke("delete_diet_entry", { id });
+};
+
+// ===== 地理位置服务API =====
+
+export const getUserLocation = async (): Promise<LocationInfo> => {
+  return await invoke("get_user_location");
+};
+
+export const searchNearbyRestaurants = async (
+  location: { latitude: number; longitude: number },
+  radiusKm?: number,
+  cuisineTypes?: string[],
+  maxResults?: number
+): Promise<Restaurant[]> => {
+  return await invoke("search_nearby_restaurants", {
+    location,
+    radiusKm,
+    cuisineTypes,
+    maxResults,
+  });
+};
+
+export const searchDeliveryOptions = async (
+  location: { latitude: number; longitude: number },
+  maxDeliveryTime?: number,
+  maxDeliveryFee?: number,
+  maxResults?: number
+): Promise<[Restaurant, DeliveryService][]> => {
+  return await invoke("search_delivery_options", {
+    location,
+    maxDeliveryTime,
+    maxDeliveryFee,
+    maxResults,
+  });
+};
+
+export const searchIngredientStores = async (
+  location: { latitude: number; longitude: number },
+  radiusKm?: number,
+  requiredIngredients?: string[],
+  maxResults?: number
+): Promise<IngredientStore[]> => {
+  return await invoke("search_ingredient_stores", {
+    location,
+    radiusKm,
+    requiredIngredients,
+    maxResults,
+  });
+};
+
+export const generateShoppingList = async (
+  location: { latitude: number; longitude: number },
+  recipeIngredients: Array<{ name: string; amount: number; unit: string }>
+): Promise<ShoppingList> => {
+  return await invoke("generate_shopping_list", {
+    location,
+    recipeIngredients,
+  });
+};
+
+export const getQuickDelivery = async (location: {
+  latitude: number;
+  longitude: number;
+}): Promise<[Restaurant, DeliveryService][]> => {
+  return await invoke("get_quick_delivery", { location });
 };
 
 // Recipe Commands

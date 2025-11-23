@@ -255,31 +255,37 @@ pub struct AmapLocation {
 
 impl AmapLocation {
     pub fn new(longitude: f64, latitude: f64) -> Self {
-        Self { longitude, latitude }
+        Self {
+            longitude,
+            latitude,
+        }
     }
-    
+
     /// 从高德API的"longitude,latitude"字符串解析
     pub fn from_string(location_str: &str) -> Result<Self, crate::AppError> {
         let parts: Vec<&str> = location_str.split(',').collect();
         if parts.len() != 2 {
-            return Err(crate::AppError::Validation(
-                format!("Invalid location format: {}", location_str)
-            ));
+            return Err(crate::AppError::Validation(format!(
+                "Invalid location format: {}",
+                location_str
+            )));
         }
-        
-        let longitude = parts[0].parse::<f64>()
+
+        let longitude = parts[0]
+            .parse::<f64>()
             .map_err(|_| crate::AppError::Validation("Invalid longitude".to_string()))?;
-        let latitude = parts[1].parse::<f64>()
+        let latitude = parts[1]
+            .parse::<f64>()
             .map_err(|_| crate::AppError::Validation("Invalid latitude".to_string()))?;
-        
+
         Ok(Self::new(longitude, latitude))
     }
-    
+
     /// 转换为高德API格式的字符串
     pub fn to_string(&self) -> String {
         format!("{},{}", self.longitude, self.latitude)
     }
-    
+
     /// 转换为我们的Location结构
     pub fn to_location(&self) -> crate::location::Location {
         crate::location::Location {
@@ -306,13 +312,13 @@ pub mod poi_types {
     pub const FOREIGN_RESTAURANT: &str = "050200";
     pub const FAST_FOOD: &str = "050300";
     pub const LEISURE_DINING: &str = "050400";
-    
+
     // 购物服务
     pub const SHOPPING_SERVICE: &str = "060000";
     pub const SHOPPING_CENTER: &str = "060100";
     pub const CONVENIENCE_STORE: &str = "060200";
     pub const APPLIANCE_STORE: &str = "060300";
-    
+
     // 生活服务
     pub const LIFE_SERVICE: &str = "070000";
     pub const SUPERMARKET: &str = "060201";
@@ -327,7 +333,7 @@ mod tests {
     fn test_amap_location_parsing() {
         let location_str = "116.397428,39.90923";
         let location = AmapLocation::from_string(location_str).unwrap();
-        
+
         assert_eq!(location.longitude, 116.397428);
         assert_eq!(location.latitude, 39.90923);
         assert_eq!(location.to_string(), location_str);
@@ -337,7 +343,7 @@ mod tests {
     fn test_invalid_location_parsing() {
         let invalid_location = "invalid,format,extra";
         assert!(AmapLocation::from_string(invalid_location).is_err());
-        
+
         let invalid_numbers = "not_a_number,39.90923";
         assert!(AmapLocation::from_string(invalid_numbers).is_err());
     }
@@ -346,9 +352,12 @@ mod tests {
     fn test_location_conversion() {
         let amap_location = AmapLocation::new(116.397428, 39.90923);
         let our_location = amap_location.to_location();
-        
+
         assert_eq!(our_location.longitude, 116.397428);
         assert_eq!(our_location.latitude, 39.90923);
-        assert!(matches!(our_location.source, crate::location::LocationSource::Network));
+        assert!(matches!(
+            our_location.source,
+            crate::location::LocationSource::Network
+        ));
     }
 }
