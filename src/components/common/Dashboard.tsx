@@ -11,6 +11,7 @@ import {
   useNavigation,
   getIncompleteSteps,
 } from "../../hooks/useNavigation.tsx";
+import { MapWidget } from "../Map";
 
 const Dashboard: React.FC = () => {
   const { setActiveTab } = useNavigation();
@@ -57,7 +58,7 @@ const Dashboard: React.FC = () => {
             history.status === "fulfilled"
               ? (history.value.length / 7) * 100
               : 0,
-            100,
+            100
           ),
         });
       } catch (error) {
@@ -221,44 +222,66 @@ const Dashboard: React.FC = () => {
         </Row>
       </Card>
 
-      {/* 使用提示 */}
-      <Card title="使用指南">
-        <div className="space-y-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
-              1
-            </div>
-            <div>
-              <div className="font-medium">完善健康档案</div>
-              <div className="text-sm text-gray-600">
-                填写您的基本信息、健康目标和饮食偏好，以获得个性化推荐
+      {/* 地图小部件 */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
+          <MapWidget
+            maxRestaurants={5}
+            onViewMore={() => setActiveTab("recommendations")}
+          />
+        </Col>
+        <Col xs={24} lg={12}>
+          {/* 使用提示 */}
+          <Card title="使用指南">
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
+                <div>
+                  <div className="font-medium">完善健康档案</div>
+                  <div className="text-sm text-gray-600">
+                    填写您的基本信息、健康目标和饮食偏好，以获得个性化推荐
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                <div>
+                  <div className="font-medium">查看饮食推荐</div>
+                  <div className="text-sm text-gray-600">
+                    根据您的健康档案，系统会推荐适合的饮食方案
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
+                <div>
+                  <div className="font-medium">记录饮食历史</div>
+                  <div className="text-sm text-gray-600">
+                    记录每日饮食，跟踪健康目标的完成情况
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-bold">
+                  4
+                </div>
+                <div>
+                  <div className="font-medium">探索附近餐厅</div>
+                  <div className="text-sm text-gray-600">
+                    使用地图功能查找附近的健康餐厅，获得更多饮食选择
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">
-              2
-            </div>
-            <div>
-              <div className="font-medium">查看饮食推荐</div>
-              <div className="text-sm text-gray-600">
-                根据您的健康档案，系统会推荐适合的饮食方案
-              </div>
-            </div>
-          </div>
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-bold">
-              3
-            </div>
-            <div>
-              <div className="font-medium">记录饮食历史</div>
-              <div className="text-sm text-gray-600">
-                记录每日饮食，跟踪健康目标的完成情况
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };
