@@ -1,5 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, Button, List, message, Tag, Select, Space, Modal } from "antd";
+import {
+  Card,
+  Button,
+  List,
+  message,
+  Tag,
+  Select,
+  Space,
+  Modal,
+  Alert,
+  Row,
+  Col,
+  Typography,
+} from "antd";
+
+const { Text } = Typography;
 import {
   HeartOutlined,
   ClockCircleOutlined,
@@ -16,6 +31,7 @@ import AddToHistoryModal from "./AddToHistoryModal";
 import { AmapContainer, RestaurantMarker, LocationMarker } from "../Map";
 import { useRestaurantMap } from "../../hooks/useRestaurantMap";
 import { useMapLoader } from "../../hooks/useMapLoader";
+import { useAmapLocation } from "../../hooks/useAmapLocation";
 
 interface RecommendationListProps {
   mealTypeFilter?: "breakfast" | "lunch" | "dinner" | "snack" | "all";
@@ -38,14 +54,21 @@ const RecommendationList = ({
     useState<RecommendationItem | null>(null);
 
   // 地图相关hooks
+  const { isLoaded: mapLoaded, isLoading: mapLoading } = useMapLoader({
+    autoLoad: true,
+  });
+
+  // 位置服务hook
   const {
-    isLoaded: mapLoaded,
-    isLoading: mapLoading,
-  } = useMapLoader({ autoLoad: true });
-  const {
-    selectedRestaurant,
-    userLocation,
-  } = useRestaurantMap({ autoLoad: false });
+    location: userLocation,
+    loading: locationLoading,
+    error: locationError,
+    permissionState,
+    requestLocation,
+    requestPermission,
+  } = useAmapLocation({ enableCache: true });
+
+  useRestaurantMap({ autoLoad: false });
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [addToHistoryModalVisible, setAddToHistoryModalVisible] =
     useState(false);
@@ -54,57 +77,63 @@ const RecommendationList = ({
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadRecommendations = useCallback(async (isRefresh: boolean = false) => {
-    try {
-      const userId = localStorage.getItem("userId") || "default-user";
+  const loadRecommendations = useCallback(
+    async (isRefresh: boolean = false) => {
+      try {
+        const userId = localStorage.getItem("userId") || "default-user";
 
-      if (isRefresh) {
-        // 刷新时不清除现有数据，只显示刷新状态
-        setRefreshing(true);
+        if (isRefresh) {
+          // 刷新时不清除现有数据，只显示刷新状态
+          setRefreshing(true);
+        }
+
+        const data = await getRecommendations(userId);
+
+        // 为地图视图添加位置信息
+        const dataWithLocation = await enrichWithLocationData(data);
+        setRecommendations(dataWithLocation);
+      } catch (error) {
+        console.error("Error loading recommendations:", error);
+        message.error("加载推荐失败，请稍后重试");
+      } finally {
+        setRefreshing(false);
       }
-
-      const data = await getRecommendations(userId);
-
-      // 为地图视图添加位置信息
-      const dataWithLocation = await enrichWithLocationData(data);
-      setRecommendations(dataWithLocation);
-    } catch (error) {
-      console.error("Error loading recommendations:", error);
-      message.error("加载推荐失败，请稍后重试");
-    } finally {
-      setRefreshing(false);
-    }
-  }, [userLocation]);
+    },
+    [enrichWithLocationData]
+  );
 
   // 为餐厅数据添加位置信息（模拟函数）
-  const enrichWithLocationData = useCallback(async (restaurants: RecommendationItem[]) => {
-    return restaurants.map((restaurant) => {
-      // 模拟添加位置信息
-      // 实际应用中这些数据应该来自后端API
-      const userPos = userLocation?.position
-        ? [userLocation.position.lng, userLocation.position.lat]
-        : [116.397428, 39.90923];
-      const offset = 0.05; // 约5公里范围
-      const position: [number, number] = [
-        userPos[0] + (Math.random() - 0.5) * offset,
-        userPos[1] + (Math.random() - 0.5) * offset,
-      ];
+  const enrichWithLocationData = useCallback(
+    async (restaurants: RecommendationItem[]) => {
+      return restaurants.map((restaurant) => {
+        // 模拟添加位置信息
+        // 实际应用中这些数据应该来自后端API
+        const userPos = userLocation?.position
+          ? [userLocation.position.lng, userLocation.position.lat]
+          : [116.397428, 39.90923];
+        const offset = 0.05; // 约5公里范围
+        const position: [number, number] = [
+          userPos[0] + (Math.random() - 0.5) * offset,
+          userPos[1] + (Math.random() - 0.5) * offset,
+        ];
 
-      // 计算距离
-      const distance = userLocation?.position
-        ? calculateDistance(position, [
-            userLocation.position.lng,
-            userLocation.position.lat,
-          ])
-        : undefined;
+        // 计算距离
+        const distance = userLocation?.position
+          ? calculateDistance(position, [
+              userLocation.position.lng,
+              userLocation.position.lat,
+            ])
+          : undefined;
 
-      return {
-        ...restaurant,
-        position,
-        distance,
-      };
-    });
-  }, [userLocation]);
+        return {
+          ...restaurant,
+          position,
+          distance,
+        };
+      });
+    },
+    [userLocation]
+  );
 
   // 计算两点间距离（米）
   const calculateDistance = (
@@ -237,11 +266,35 @@ const RecommendationList = ({
               <Button
                 type={viewMode === "map" ? "primary" : "default"}
                 icon={<EnvironmentFilled />}
-                onClick={() => setViewMode("map")}
+                onClick={() => {
+                  if (permissionState === "prompt") {
+                    // 如果还没有权限，先请求权限
+                    requestPermission().then((granted) => {
+                      if (granted) {
+                        setViewMode("map");
+                      }
+                    });
+                  } else {
+                    setViewMode("map");
+                  }
+                }}
                 disabled={mapLoading || !mapLoaded}
                 size="small"
+                title={
+                  permissionState === "denied"
+                    ? "需要位置权限才能使用地图功能"
+                    : permissionState === "prompt"
+                      ? "点击申请位置权限并切换到地图视图"
+                      : "切换到地图视图"
+                }
               >
                 地图
+                {permissionState === "denied" && (
+                  <span className="text-red-500 ml-1">!</span>
+                )}
+                {permissionState === "prompt" && (
+                  <span className="text-orange-500 ml-1">?</span>
+                )}
               </Button>
             </Button.Group>
           </div>
@@ -251,6 +304,123 @@ const RecommendationList = ({
       {/* 地图视图 */}
       {viewMode === "map" && (
         <div className="mb-6">
+          {/* 位置权限状态管理 */}
+          <Card className="mb-4" size="small">
+            <Row gutter={16} align="middle">
+              <Col flex="auto">
+                <div className="flex items-center space-x-3">
+                  <Text strong>位置服务状态:</Text>
+
+                  {permissionState === "granted" && userLocation && (
+                    <div className="flex items-center space-x-2">
+                      <Tag color="success">已获取定位权限</Tag>
+                      <Text type="secondary" className="text-sm">
+                        {userLocation.address.city || ""}
+                        {userLocation.address.district || ""}
+                      </Text>
+                    </div>
+                  )}
+
+                  {permissionState === "denied" && (
+                    <Alert
+                      type="warning"
+                      size="small"
+                      showIcon
+                      message="定位权限被拒绝"
+                      description="请在浏览器设置中开启位置权限，或使用下方按钮重新申请权限"
+                      style={{ flex: 1 }}
+                    />
+                  )}
+
+                  {permissionState === "prompt" && (
+                    <Alert
+                      type="info"
+                      size="small"
+                      showIcon
+                      message="需要位置权限"
+                      description="点击下方按钮获取您的位置信息，以显示附近餐厅"
+                      style={{ flex: 1 }}
+                    />
+                  )}
+
+                  {locationError && (
+                    <Alert
+                      type="error"
+                      size="small"
+                      showIcon
+                      message="定位失败"
+                      description={locationError}
+                      style={{ flex: 1 }}
+                    />
+                  )}
+                </div>
+              </Col>
+
+              <Col>
+                <Space>
+                  {permissionState === "prompt" && (
+                    <Button
+                      type="primary"
+                      icon={<EnvironmentFilled />}
+                      onClick={requestPermission}
+                      loading={locationLoading}
+                    >
+                      申请定位权限
+                    </Button>
+                  )}
+
+                  {permissionState === "granted" && (
+                    <Button
+                      icon={<ReloadOutlined />}
+                      onClick={requestLocation}
+                      loading={locationLoading}
+                    >
+                      刷新位置
+                    </Button>
+                  )}
+
+                  {permissionState === "denied" && (
+                    <Button
+                      type="primary"
+                      danger
+                      icon={<EnvironmentFilled />}
+                      onClick={() => {
+                        Modal.info({
+                          title: "如何开启位置权限",
+                          content: (
+                            <div className="space-y-3">
+                              <p>
+                                <strong>Chrome浏览器:</strong>
+                              </p>
+                              <ol className="list-decimal list-inside space-y-1 text-sm">
+                                <li>点击地址栏左侧的锁头图标</li>
+                                <li>在弹窗中找到&quot;位置信息&quot;选项</li>
+                                <li>选择&quot;允许&quot;</li>
+                                <li>刷新页面</li>
+                              </ol>
+                              <p>
+                                <strong>Safari浏览器:</strong>
+                              </p>
+                              <ol className="list-decimal list-inside space-y-1 text-sm">
+                                <li>点击Safari菜单 → 偏好设置</li>
+                                <li>选择&quot;网站&quot;标签</li>
+                                <li>在左侧找到&quot;位置服务&quot;</li>
+                                <li>设置当前网站为&quot;允许&quot;</li>
+                              </ol>
+                            </div>
+                          ),
+                          width: 480,
+                        });
+                      }}
+                    >
+                      查看开启方法
+                    </Button>
+                  )}
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+
           {mapLoading && (
             <div className="text-center py-8 text-gray-500">地图加载中...</div>
           )}

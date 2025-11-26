@@ -2,6 +2,27 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { message } from "antd";
 import { isAmapLoaded, loadAmapScript } from "../lib/amapConfig";
 
+// Type declarations for geolocation permissions
+type PermissionName =
+  | "geolocation"
+  | "notifications"
+  | "push"
+  | "midi"
+  | "camera"
+  | "microphone"
+  | "speaker"
+  | "device-info"
+  | "background-sync"
+  | "bluetooth"
+  | "persistent-storage"
+  | "ambient-light-sensor"
+  | "accelerometer"
+  | "gyroscope"
+  | "magnetometer"
+  | "clipboard"
+  | "payment-handler";
+type PermissionState = "granted" | "denied" | "prompt";
+
 export interface AmapLocationInfo {
   /** 经纬度坐标 */
   position: {
@@ -63,6 +84,12 @@ export interface UseAmapLocationReturn {
   refreshLocation: () => Promise<void>;
   /** 是否支持定位 */
   isSupported: boolean;
+  /** 权限状态 */
+  permissionState: "granted" | "denied" | "prompt" | "unknown";
+  /** 检查权限状态 */
+  checkPermission: () => Promise<PermissionState | "unknown">;
+  /** 请求权限（不获取位置） */
+  requestPermission: () => Promise<boolean>;
 }
 
 const CACHE_KEY = "amap_user_location";
@@ -95,6 +122,9 @@ export const useAmapLocation = (
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSupported, setIsSupported] = useState(true);
+  const [permissionState, setPermissionState] = useState<
+    "granted" | "denied" | "prompt" | "unknown"
+  >("unknown");
 
   const geolocationRef = useRef<any>(null);
   const geocoderRef = useRef<any>(null);
@@ -153,6 +183,101 @@ export const useAmapLocation = (
   const clearCache = useCallback(() => {
     localStorage.removeItem(CACHE_KEY);
   }, []);
+
+  /**
+   * 检查定位权限状态
+   */
+  const checkPermission = useCallback(async (): Promise<
+    PermissionState | "unknown"
+  > => {
+    try {
+      if (!navigator.permissions) {
+        console.warn("浏览器不支持权限查询API");
+        return "unknown";
+      }
+
+      const result = await navigator.permissions.query({
+        name: "geolocation" as PermissionName,
+      });
+      setPermissionState(result.state as "granted" | "denied" | "prompt");
+      return result.state;
+    } catch (error) {
+      console.error("权限检查失败:", error);
+      setPermissionState("unknown");
+      return "unknown";
+    }
+  }, []);
+
+  /**
+   * 请求定位权限（不获取位置）
+   */
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      // 首先检查当前权限状态
+      const currentState = await checkPermission();
+
+      if (currentState === "granted") {
+        return true;
+      }
+
+      if (currentState === "denied") {
+        setError("定位权限已被拒绝，请在浏览器设置中手动开启定位权限");
+        return false;
+      }
+
+      // 尝试通过触发定位获取来请求权限
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          setError("当前浏览器不支持定位功能");
+          resolve(false);
+          return;
+        }
+
+        const timeoutId = setTimeout(() => {
+          setError("权限请求超时，请手动在浏览器中开启定位权限");
+          resolve(false);
+        }, 10000);
+
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            clearTimeout(timeoutId);
+            setPermissionState("granted");
+            setError(null);
+            resolve(true);
+          },
+          (error) => {
+            clearTimeout(timeoutId);
+
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                setPermissionState("denied");
+                setError("定位权限被拒绝，请在浏览器设置中开启定位权限");
+                break;
+              case error.POSITION_UNAVAILABLE:
+                setError("当前位置不可用，请检查网络连接");
+                break;
+              case error.TIMEOUT:
+                setError("定位请求超时，请重试");
+                break;
+              default:
+                setError("定位失败，请重试");
+                break;
+            }
+            resolve(false);
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 8000,
+            maximumAge: 0,
+          }
+        );
+      });
+    } catch (error) {
+      console.error("权限请求失败:", error);
+      setError("权限请求失败，请重试");
+      return false;
+    }
+  }, [checkPermission]);
 
   /**
    * 初始化高德地图服务
@@ -396,6 +521,14 @@ export const useAmapLocation = (
     setError(null);
 
     try {
+      // 先检查和请求权限
+      const hasPermission = await requestPermission();
+
+      if (!hasPermission) {
+        // 权限被拒绝，不继续获取位置
+        return;
+      }
+
       const locationInfo = await getLocation();
       setLocation(locationInfo);
 
@@ -428,7 +561,7 @@ export const useAmapLocation = (
     } finally {
       setLoading(false);
     }
-  }, [loading, getLocation]);
+  }, [loading, getLocation, requestPermission]);
 
   /**
    * 刷新位置
@@ -442,18 +575,22 @@ export const useAmapLocation = (
    * 检查浏览器是否支持定位
    */
   useEffect(() => {
-    const checkSupport = () => {
+    const checkSupport = async () => {
       const supported =
         "geolocation" in navigator || typeof window !== "undefined";
       setIsSupported(supported);
 
       if (!supported) {
         setError("当前浏览器不支持定位功能");
+        return;
       }
+
+      // 检查初始权限状态
+      await checkPermission();
     };
 
     checkSupport();
-  }, []);
+  }, [checkPermission]);
 
   /**
    * 组件卸载时清理
@@ -481,5 +618,8 @@ export const useAmapLocation = (
     clearCache,
     refreshLocation,
     isSupported,
+    permissionState,
+    checkPermission,
+    requestPermission,
   };
 };
